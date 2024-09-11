@@ -7,21 +7,25 @@
     background-color: #895555;
 }
 
-.uploadZone {
+.uploadZoneSize {
     width: 80%;
     height: 60vh;
-    border: 2px dashed #ccc;
-    border-radius: 8px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+}
+
+.uploadZoneAppearance {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
     cursor: pointer;
     transition: border-color 0.3s ease;
     background-color: #fff;
 }
 
-.uploadZone:hover, .dragOver{
+.uploadZoneAppearance:hover, .dragOver{
     border-color: #007bff;
 }
 
