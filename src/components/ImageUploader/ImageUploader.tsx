@@ -1,5 +1,7 @@
 import { FC, useState } from 'react';
 
+import ImageProcessor from "../ImageProcessor/ImageProcessor"
+
 import styles from './assets/ImageUploader.module.css';
 
 const ImageUploader: FC = () => {
@@ -7,6 +9,7 @@ const ImageUploader: FC = () => {
   const [image, setImage] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isUploaded, setUploadedStatus] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,6 +57,7 @@ const ImageUploader: FC = () => {
   const handleDeleteImage = () => {
     setImage(null);
     setUploadedStatus(false);
+    setIsEditing(false);
   };
 
   const handleReplaceImage = () => {
@@ -61,32 +65,42 @@ const ImageUploader: FC = () => {
   };
 
   const handleOpenEditor = () => {
-    // pending
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
   };
 
   return (
     <div className={styles.uploadContainer}>
-      <div 
-        className={`${styles.uploadZoneSize} ${dragOver ? styles.dragOver : ""} ${!isUploaded ? styles.uploadZoneAppearance : ""}`}
-        onClick={!isUploaded ? () => document.getElementById('fileInput')?.click() : undefined}
-        onDrop={!isUploaded ? handleDrop : undefined}
-        onDragOver={!isUploaded ? handleDragOver : undefined}
-        onDragLeave={!isUploaded ? handleDragLeave : undefined}
-        >
-          {image ? (
-            <>
-              <div className={styles.settingsPanel}>
-                <span>Image</span>
-                <button onClick={handleReplaceImage} className={styles.toolButton}>Replace</button>
-                <button onClick={handleOpenEditor} className={styles.toolButton}>Edit</button>
-                <button onClick={handleDeleteImage} className={styles.toolButton}>Delete</button>
-              </div>
-              <img src={image} alt="Uploaded" className={styles.uploadedImage} />
-            </>
-          ) : (
-            <p>Перетащите сюда изображение или нажмите, чтобы выбрать файл</p>
-          )}
-      </div>
+      {!isEditing ? (
+        <div 
+          className={`${styles.uploadZoneSize} ${dragOver ? styles.dragOver : ""} ${!isUploaded ? styles.uploadZoneAppearance : ""}`}
+          onClick={!isUploaded ? () => document.getElementById('fileInput')?.click() : undefined}
+          onDrop={!isUploaded ? handleDrop : undefined}
+          onDragOver={!isUploaded ? handleDragOver : undefined}
+          onDragLeave={!isUploaded ? handleDragLeave : undefined}
+          >
+            {image ? (
+              <>
+                <div className={styles.settingsPanel}>
+                  <span>Image</span>
+                  <button onClick={handleReplaceImage} className={styles.toolButton}>Replace</button>
+                  <button onClick={handleOpenEditor} className={styles.toolButton}>Edit</button>
+                  <button onClick={handleDeleteImage} className={styles.toolButton}>Delete</button>
+                </div>
+                <img src={image} alt="Uploaded" className={styles.uploadedImage} />
+              </>
+            ) : (
+              <p>Перетащите сюда изображение или нажмите, чтобы выбрать файл</p>
+            )}
+        </div>
+      ) : (
+        image && (
+          <ImageProcessor imageSrc={image} onCancel={handleCancelEdit} />
+        )
+      )}
       <input
           type="file"
           id="fileInput"
