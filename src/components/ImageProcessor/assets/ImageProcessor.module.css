@@ -1,0 +1,52 @@
+.imageProcessorContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.contentWrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background-color: aqua;
+}
+
+.footer {
+    background-color: brown;
+}
+
+.leftMenu, .rightMenu{
+    display: flex;
+    flex-direction: column;
+    background-color: burlywood;
+}
+
+.resizeRightPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.saveConstrainResizeImage {
+    object-fit: cover;
+}
+
+.rotateFlipControls {
+    display: flex;
+    flex-direction: column;
+}
+
+.rotateControls, .flipControls {
+    display: flex;
+    flex-direction: row;
+}
+
+.sliderContainer {
+    display: flex;
+    flex-direction: column;
+}
