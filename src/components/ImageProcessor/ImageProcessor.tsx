@@ -518,9 +518,11 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       setCurrentImage(tempImage);
       
       //TODO CLEANER?
+      setElements([])
       setFlipHorizontal(false);
       setFlipVertical(false);
       setRotateAngle(0);
+
     }
   };
 
@@ -568,7 +570,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         ctx.save();
         ctx.translate(width / 2, height / 2);
         ctx.rotate((rotateAngle * Math.PI) / 180);
-        ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
+        ctx.scale(flipHorizontal ? 1 : -1, flipVertical ? 1 : -1);
         ctx.drawImage(currentImage, -width / 2, -height / 2);
         ctx.restore();
 
@@ -647,8 +649,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 style={{
                   transform: `
                     rotate(${rotateAngle}deg)
-                    scaleX(${flipHorizontal ? -1 : 1})
-                    scaleY(${flipVertical ? -1 : 1})
+                    scaleY(${flipHorizontal ? -1 : 1})
+                    scaleX(${flipVertical ? -1 : 1})
                   `,
                 }}
               />
