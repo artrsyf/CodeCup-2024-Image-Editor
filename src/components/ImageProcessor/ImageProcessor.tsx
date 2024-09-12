@@ -1,5 +1,4 @@
-import React, { FC, useState, useCallback, useRef, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { FC, useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Line, Circle, Rect, Transformer, Image as KonvaImage } from 'react-konva';
 import Konva from 'konva';
 
@@ -17,25 +16,32 @@ interface ImageProcessorProps {
 }
 
 const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
+  const [currentImage, setCurrentImage] = useState<HTMLImageElement | undefined>(undefined);
+  const [tempImage, setTempImage] = useState<HTMLImageElement | undefined>(undefined);
+
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
-  const [imageToCrop, setImageToCrop] = useState(undefined);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  //cropSettings
   const [cropScale, setCropScale] = useState<number>(1);
 
-  const [resizeWidth, setResizeWidth] = useState<number | ''>('');
-  const [resizeHeight, setResizeHeight] = useState<number | ''>('');
+  //adjustSettings
+  const canvasRef = useRef<HTMLCanvasElement>(document.createElement('canvas'));
+  const [resizeHeight, setResizeHeight] = useState<number>(0);
+  const [resizeWidth, setResizeWidth] = useState<number>(0);
   const [preserveAspectRatio, setPreserveAspectRatio] = useState<boolean>(true);
 
+  //rotateSettings
   const [rotateAngle, setRotateAngle] = useState<number>(0); // Для хранения угла поворота
   const [flipHorizontal, setFlipHorizontal] = useState<boolean>(false); // Для горизонтального отражения
   const [flipVertical, setFlipVertical] = useState<boolean>(false); // Для вертикального отражения
 
+  //slidersSettings
   const [brightness, setBrightness] = useState<number>(0);
   const [contrast, setContrast] = useState<number>(0);
   const [saturation, setSaturation] = useState<number>(0);
   const [exposure, setExposure] = useState<number>(1);
 
+  // filterSettings
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const [showElementsModal, setShowElementsModal] = useState<boolean>(false);
@@ -43,15 +49,25 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const stageRef = useRef<any>(null);
-  const [imgKanva, setImage] = useState<HTMLImageElement | undefined>(undefined);
+
+  // ????
+
+
+  //
+  
 
   const [editingText, setEditingText] = useState<any>(null);
 
+  // Начальная установка текущей пикчи
   useEffect(() => {
     const img = new window.Image();
     img.src = imageSrc;
     img.onload = () => {
-      setImage(img);
+      setCurrentImage(img);
+      setTempImage(img);
+
+      setResizeHeight(img.height);
+      setResizeWidth(img.width);
     };
   }, [imageSrc]);
 
@@ -80,17 +96,14 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     setRotateAngle((prevAngle) => (prevAngle + 90) % 360);
   };
 
-  // Функция для поворота влево (на -90 градусов)
   const handleRotateLeft = () => {
     setRotateAngle((prevAngle) => (prevAngle - 90 + 360) % 360);
   };
 
-  // Функция для горизонтального отражения
   const handleFlipHorizontal = () => {
     setFlipHorizontal((prev) => !prev);
   };
 
-  // Функция для вертикального отражения
   const handleFlipVertical = () => {
     setFlipVertical((prev) => !prev);
   };
@@ -159,6 +172,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     }
     setElements([...elements, newElement]);
     setShowElementsModal(false);
+
+    saveToTempImage();
   };
 
   useEffect(() => {
@@ -197,6 +212,26 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
     node.scaleX(1);
     node.scaleY(1);
+
+    saveToTempImage();
+  };
+
+  const saveToTempImage = () => {
+    console.log("trying")
+    if (stageRef.current) {
+      console.log("saving")
+      const stage = stageRef.current;
+      const dataURL = stage.toDataURL({ pixelRatio: 3 }); // Increase quality
+
+      const newImage = new Image();
+      newImage.src = dataURL;
+
+      setTempImage(newImage);
+    }
+  };
+
+  const handleDragEnd = () => {
+    saveToTempImage();
   };
 
   useEffect(() => {
@@ -208,7 +243,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const handleTextDblClick = (element: any) => {
     setEditingText(element);
   };
-
+  
   const renderTextEditArea = () => {
     if (!editingText) return null;
 
@@ -370,24 +405,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     });
   };
 
-  const handleApplySettings = (settings: {
-    fontSize: number;
-    fontFamily: string;
-    fontStyle: string;
-    textAlign: string;
-    color: string;
-}) => {
-    const textNode = stageRef.current?.findOne(`#${selectedElement?.id}`);
-    if (textNode) {
-        textNode.fontSize(settings.fontSize);
-        textNode.fontFamily(settings.fontFamily);
-        textNode.fontStyle(settings.fontStyle);
-        textNode.align(settings.textAlign);
-        textNode.fill(settings.color as string);
-        textNode.getLayer()?.batchDraw();
-    }
-};
-
   const handleCloseMenu = () => {
     setSelectedElement(null);
   };
@@ -432,7 +449,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               />
               Constrain proportions
             </label>
-            {/* <button className={styles.toolButton} onClick={handleResize}>Apply Resize</button> */}
           </div>
         );
       case 'rotate':
@@ -475,7 +491,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         );
       case 'elements':
         if (selectedElement) {
-          console.log(selectedElement.type)
           if (selectedElement.type === 'text') {
             return (
               <TextSettingsMenu
@@ -498,17 +513,77 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     }
   };
 
-  const handleSave = () => {
-    if (croppedImage) {
-      // Создаем ссылку на скачивание изображения
-      const link = document.createElement('a');
-      link.href = croppedImage;
-      link.download = 'edited_image.jpg'; // Название файла
-      link.click();
-    } else {
-      alert('Нет отредактированного изображения для сохранения.');
+  const saveCurrentImage = () => {
+    if (tempImage) {
+      setCurrentImage(tempImage);
+      
+      //TODO CLEANER?
+      setFlipHorizontal(false);
+      setFlipVertical(false);
+      setRotateAngle(0);
     }
   };
+
+  useEffect(() => {
+    produceRotatedImage()
+  }, [flipHorizontal, flipVertical, rotateAngle])
+
+  useEffect(() => {
+    produceNewTempImage()
+  }, [resizeHeight, resizeWidth, preserveAspectRatio])
+
+  useEffect(() => {
+    produceAdjustedTempImage()
+  }, [brightness, contrast, saturation, exposure])
+
+  const produceNewTempImage = () => {
+    if (currentImage) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        canvas.width = resizeWidth;
+        canvas.height = resizeHeight;
+        ctx.drawImage(currentImage, 0, 0, resizeWidth, resizeHeight);
+
+        const newImageSrc = canvas.toDataURL('image/jpeg');
+        const newImage = new Image();
+        newImage.src = newImageSrc;
+
+        setTempImage(newImage);
+      }
+    }
+  };
+
+  const produceRotatedImage = () => {
+    if (currentImage) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const width = currentImage.width;
+        const height = currentImage.height;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        ctx.rotate((rotateAngle * Math.PI) / 180);
+        ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
+        ctx.drawImage(currentImage, -width / 2, -height / 2);
+        ctx.restore();
+
+        const newImageSrc = canvas.toDataURL('image/jpeg');
+        const newImage = new Image();
+        newImage.src = newImageSrc;
+
+        setTempImage(newImage);
+      }
+    }
+  };
+
+  const produceAdjustedTempImage = () => {
+
+  }
   
   return (
     <div className={styles.imageProcessorContainer}>
@@ -517,6 +592,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       </header>
 
       <div className={styles.contentWrapper}>
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
         <div className={styles.leftMenu}>
           <button className={styles.toolButton} onClick={() => handleToolClick('crop')}>Crop</button>
           <button className={styles.toolButton} onClick={() => handleToolClick('resize')}>Resize</button>
@@ -540,52 +616,67 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         </div>
 
         <div className={styles.mainContent}>
-          {/* <Canvas imageSrc={imageSrc} /> */}
-
           {activeTool === 'crop' && (
+            <>
             <ImageCropper
-              imageToCrop={imageSrc}
+              imageToCrop={currentImage?.src || ''}
               cropScale={cropScale}
-              onImageCropped={(croppedImage) => setCroppedImage(croppedImage)}
+              onImageCropped={(croppedImage) => setTempImage(croppedImage)}
             />
+            </>
           )}
+          {/* Resize tool */}
           {activeTool === 'resize' && (
-            <div><img src={imageSrc} className={preserveAspectRatio ? styles.saveConstrainResizeImage : ""} height={resizeHeight} width={resizeWidth} alt="Uploaded"/></div>
+            <div>
+              <img
+                src={currentImage?.src || ""}
+                className={preserveAspectRatio ? styles.saveConstrainResizeImage : ""}
+                height={resizeHeight}
+                width={resizeWidth}
+                alt="Resized"
+              />
+            </div>
           )}
+
+          {/* Rotate tool */}
           {activeTool === 'rotate' && (
             <div>
               <img
-                src={imageSrc}
+                src={currentImage?.src || ""}
                 alt="Rotated"
                 style={{
                   transform: `
-                    rotate(${rotateAngle}deg) 
-                    scaleX(${flipHorizontal ? -1 : 1}) 
+                    rotate(${rotateAngle}deg)
+                    scaleX(${flipHorizontal ? -1 : 1})
                     scaleY(${flipVertical ? -1 : 1})
                   `,
                 }}
-                className={styles.rotatedImage}
               />
             </div>
           )}
           {activeTool === 'adjust'&& (
             <AdjustTool
-              imageSrc={imageSrc}
+              imageSrc={currentImage?.src || ""}
               brightness={brightness}
               contrast={contrast}
               saturation={saturation}
               exposure={exposure}
+              onImageAdjusted={(tempImage) => setTempImage(tempImage)}
             />
           )}
           {activeTool === 'filters' && (
-            <FilterTool imageSrc={imageSrc} selectedFilter={activeFilter} />
+            <FilterTool 
+              imageSrc={currentImage?.src || ""} 
+              selectedFilter={activeFilter}
+              onImageFiltered={(tempImage) => setTempImage(tempImage)}
+            />
           )}
           {activeTool === 'elements' && (
             <Stage width={800} height={600} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)}>
               <Layer>
                 {imageSrc && (
                   <KonvaImage
-                    image={imgKanva}
+                    image={currentImage}
                     x={0}
                     y={0}
                     width={800}
@@ -607,6 +698,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                               handleSelectElement(element)
                             }}
                             onTransformEnd={handleTransform}
+                            onDragEnd={handleDragEnd}
                             onDblClick={() => handleTextDblClick(element)}
                             onDblTap={() => handleTextDblClick(element)}
                             id={element.id}
@@ -620,6 +712,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                           {...element}
                           onClick={() => handleSelectElement(element)}
                           onTransformEnd={handleTransform}
+                          onDragEnd={handleDragEnd}
                           id={element.id}
                         />
                       );
@@ -630,6 +723,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                           {...element}
                           onClick={() => handleSelectElement(element)}
                           onTransformEnd={handleTransform}
+                          onDragEnd={handleDragEnd}
                           id={element.id}
                         />
                       );
@@ -640,6 +734,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                           {...element}
                           onClick={() => handleSelectElement(element)}
                           onTransformEnd={handleTransform}
+                          onDragEnd={handleDragEnd}
                           id={element.id}
                         />
                       );
@@ -662,12 +757,14 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               </Layer>
             </Stage>
           )}
-          {activeTool === null && <div><img src={imageSrc} alt="Uploaded"/></div>}
+          {activeTool === null && <div><img src={currentImage?.src} alt="Uploaded"/></div>}
 
           <footer className={styles.footer}>
             <div className={styles.editTools}>
               <button className={styles.toolButton} onClick={onCancel}>Cancel</button>
-              <button className={styles.toolButton} onClick={handleSave}>Save</button>
+              <button className={styles.toolButton} onClick={saveCurrentImage}>Save</button>
+              <button className={styles.toolButton}>Redo</button>
+              <button className={styles.toolButton}>Undo</button>
             </div>
           </footer>
         </div>
