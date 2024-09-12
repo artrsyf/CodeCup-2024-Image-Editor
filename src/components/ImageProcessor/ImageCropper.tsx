@@ -5,7 +5,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 interface ImageCropperProps {
   imageToCrop: string;
   cropScale: number;
-  onImageCropped: (croppedImageUrl: string) => void;
+  onImageCropped: (croppedImage: HTMLImageElement) => void; // измененный тип пропса
 }
 
 const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onImageCropped }) => {
@@ -14,34 +14,29 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
     x: 0,
     y: 0,
     width: 100,
-    height: 100
+    height: 100,
   });
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
-  // Функция для обрезки изображения
-  const cropImage = useCallback(async (crop: PixelCrop) => {
-    if (imageRef.current && crop.width && crop.height) {
-      try {
-        const croppedImage = await getCroppedImage(
-          imageRef.current,
-          crop,
-          'croppedImage.jpeg'
-        );
-
-        onImageCropped(croppedImage);
-      } catch (error) {
-        console.error('Error cropping image:', error);
+  const cropImage = useCallback(
+    async (crop: PixelCrop) => {
+      if (imageRef.current && crop.width && crop.height) {
+        try {
+          const croppedImage = await getCroppedImage(imageRef.current, crop);
+          onImageCropped(croppedImage); // вызов с передачей изображения в родительский компонент
+        } catch (error) {
+          console.error('Error cropping image:', error);
+        }
       }
-    }
-  }, [onImageCropped]);
+    },
+    [onImageCropped]
+  );
 
-  // Функция для получения обрезанного изображения
   const getCroppedImage = (
     sourceImage: HTMLImageElement,
-    cropConfig: PixelCrop,
-    fileName: string
-  ): Promise<string> => {
+    cropConfig: PixelCrop
+  ): Promise<HTMLImageElement> => {
     const canvas = document.createElement('canvas');
     const scaleX = sourceImage.naturalWidth / sourceImage.width;
     const scaleY = sourceImage.naturalHeight / sourceImage.height;
@@ -66,6 +61,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
     );
 
     return new Promise((resolve, reject) => {
+      const newImage = new Image();
       canvas.toBlob(
         (blob) => {
           if (!blob) {
@@ -73,8 +69,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
             return;
           }
 
-          const croppedImageUrl = window.URL.createObjectURL(blob);
-          resolve(croppedImageUrl);
+          newImage.src = window.URL.createObjectURL(blob);
+          newImage.onload = () => resolve(newImage);
         },
         'image/jpeg',
         1
@@ -82,16 +78,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
     });
   };
 
-  // Обработчик загрузки изображения
   const onImageLoaded = (image: HTMLImageElement) => {
     imageRef.current = image;
     setImageDimensions({
       width: image.width,
-      height: image.height
+      height: image.height,
     });
   };
 
-  // Состояние обрезки изменяется в зависимости от размеров изображения
   useEffect(() => {
     if (imageDimensions) {
       setCropConfig({
@@ -99,18 +93,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
         x: 0,
         y: 0,
         width: imageDimensions.width,
-        height: imageDimensions.height
+        height: imageDimensions.height,
       });
     }
   }, [imageDimensions]);
 
-  // Изменение сетки обрезки в соответствии с соотношением сторон
   useEffect(() => {
     setCropConfig((prev) => ({
       ...prev,
       cropScale,
       width: prev.width,
-      height: prev.width / cropScale
+      height: prev.width / cropScale,
     }));
   }, [cropScale]);
 
@@ -124,17 +117,12 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
       <img
         src={imageToCrop}
         ref={imageRef}
-        onLoad={() => onImageLoaded}
+        onLoad={(e) => onImageLoaded(e.currentTarget)}
         alt="Crop me"
         style={{ maxWidth: '100%' }}
       />
     </ReactCrop>
   );
-};
-
-// Значения по умолчанию для пропсов
-ImageCropper.defaultProps = {
-  onImageCropped: () => {},
 };
 
 export default ImageCropper;
