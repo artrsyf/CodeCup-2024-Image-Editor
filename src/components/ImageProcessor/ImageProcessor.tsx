@@ -4,6 +4,7 @@ import AdjustTool from "./AdjustTool"
 import AdjustSliders from "./AdjustSliders";
 import styles from './assets/ImageProcessor.module.css';
 import Canvas from "./Canvas"
+import FilterTool from "./FilterTool"
 
 interface ImageProcessorProps {
   imageSrc: string;
@@ -29,6 +30,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const [contrast, setContrast] = useState<number>(0);
   const [saturation, setSaturation] = useState<number>(0);
   const [exposure, setExposure] = useState<number>(1);
+
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const handleToolClick = (tool: string) => {
     setActiveTool(tool);
@@ -68,6 +71,10 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   // Функция для вертикального отражения
   const handleFlipVertical = () => {
     setFlipVertical((prev) => !prev);
+  };
+
+  const applyFilter = (filter: string) => {
+    setActiveFilter(filter);
   };
 
   // const handleResize = () => {
@@ -154,11 +161,12 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         );
       case 'filters':
         return (
-          <>
-            <button className={styles.toolButton}>Grayscale</button>
-            <button className={styles.toolButton}>Sepia</button>
-            <button className={styles.toolButton}>Blur</button>
-          </>
+          <div className={styles.filterGrid}>
+          <button className={styles.toolButton} onClick={() => applyFilter('none')}>None</button>
+          <button className={styles.toolButton} onClick={() => applyFilter('grayscale')}>Black&White</button>
+          <button className={styles.toolButton} onClick={() => applyFilter('sepia')}>Sepia</button>
+          <button className={styles.toolButton} onClick={() => applyFilter('vintage')}>Vintage</button>
+        </div>
         );
       default:
         return (
@@ -235,7 +243,9 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               exposure={exposure}
             />
           )}
-          {activeTool === 'filters' && <div>Filters Tool</div>}
+          {activeTool === 'filters' && (
+            <FilterTool imageSrc={imageSrc} selectedFilter={activeFilter} />
+          )}
           {activeTool === null && <div><img src={imageSrc} alt="Uploaded"/></div>}
 
           <footer className={styles.footer}>
