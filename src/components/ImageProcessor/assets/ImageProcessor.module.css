@@ -1,0 +1,127 @@
+.imageProcessorContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.contentWrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    border-radius: 8px 8px 0 0;
+    height: 48px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 16px;
+    size: 18px;
+    font-weight: 600;
+    background-color: white;
+    border: 1px solid gray;
+}
+
+.footer {
+    background-color: white;
+    border-bottom: 1px solid gray;
+    height: 56px;
+}
+
+.editTools {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+}
+
+.buttonCategory {
+    display: flex;
+    flex-direction: row;
+}
+
+.leftMenu{
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    width: 196px;
+    border: 1px solid gray;
+    border-top: 1px solid transparent;
+    border-radius: 0 0 0 8px;
+    padding: 0 16px 0 16px;
+}
+
+.toolButton {
+    padding: 8px 3px 8px 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.toolButton:hover {
+    color: #12A3F8;
+}
+
+.rightMenu{
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    width: 196px;
+    border: 1px solid gray;
+    border-top: 1px solid transparent;
+    border-radius: 0 0 8px 0;
+    padding: 16px;
+}
+
+.resizeRightPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.saveConstrainResizeImage {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+}
+
+.rotateFlipControls {
+    display: flex;
+    flex-direction: column;
+}
+
+.rotateControls, .flipControls {
+    display: flex;
+    flex-direction: row;
+}
+
+.sliderContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.filterGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.canvasContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70vw;
+    height: 70vh;
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+}
+
+.uploadedImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
