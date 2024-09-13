@@ -10,6 +10,9 @@ import TextSettingsMenu from './TextSettingsMenu';
 import ShapeSettingsMenu from "./ShapeSettingsMenu"
 import FilterTool from "./FilterTool"
 
+import ResizeTool from "./ResizeTool"
+import RotateTool from "./RotateTool"
+
 import {renderTextEditArea, produceResizedTempImage, produceRotatedTempImage} from "./utils/utils"
 
 interface ImageProcessorProps {
@@ -24,13 +27,13 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
   //cropSettings
-  const [cropScale, setCropScale] = useState<number>(1);
+  const [cropScale, setCropScale] = useState<number>(-1);
 
   //adjustSettings
   const canvasRef = useRef<HTMLCanvasElement>(document.createElement('canvas'));
   const [resizeHeight, setResizeHeight] = useState<number>(0);
   const [resizeWidth, setResizeWidth] = useState<number>(0);
-  const [preserveAspectRatio, setPreserveAspectRatio] = useState<boolean>(true);
+  const [preserveAspectRatio, setPreserveAspectRatio] = useState<boolean>(false);
 
   //rotateSettings
   const [rotateAngle, setRotateAngle] = useState<number>(0); // Для хранения угла поворота
@@ -230,8 +233,9 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               id="scaleSelect" 
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {setCropScale(parseFloat(event.target.value));}} 
               className={styles.scaleSelect}
-              defaultValue="1"
+              defaultValue="-1"
             >
+              <option value="-1">None</option>
               <option value="1">1:1</option>
               <option value="1.778">16:9</option>
               <option value="1.333">4:3</option>
@@ -340,9 +344,21 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const clearChanges = () => {
     setElements([])
-    setFlipHorizontal(false);
-    setFlipVertical(false);
-    setRotateAngle(0);
+    if (cropScale != -1) setCropScale(-1);
+
+    if (flipHorizontal) setFlipHorizontal(false);
+    if (flipVertical) setFlipVertical(false);
+    if (rotateAngle != 0) setRotateAngle(0);
+
+    if (currentImage && resizeHeight != currentImage.height) setResizeHeight(currentImage.height);
+    if (currentImage && resizeWidth != currentImage.width) setResizeWidth(currentImage.width);
+    if (preserveAspectRatio) setPreserveAspectRatio(false);
+
+    if (brightness != 0) setBrightness(0);
+    if (contrast != 0) setContrast(0);
+    if (saturation != 0) setSaturation(0);
+    if (exposure != 0) setExposure(1);
+
     setActiveTool(null);
     setShowElementsModal(false);
     setActiveChanges(false);
@@ -397,7 +413,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     link.remove();
   };
   useEffect(() => {
-    // produceRotatedTempImage(currentImage, canvasRef, rotateAngle, flipHorizontal, flipVertical, setTempImage)
+    produceRotatedTempImage(currentImage, canvasRef, rotateAngle, flipHorizontal, flipVertical, setTempImage)
   }, [flipHorizontal, flipVertical, rotateAngle])
 
   useEffect(() => {
@@ -413,18 +429,18 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       <div className={styles.contentWrapper}>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <div className={styles.leftMenu}>
-          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('crop');}}>Crop</button>
-          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('resize');}}>Resize</button>
-          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('rotate');}}>Rotate and flip</button>
-          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('adjust');}}>Adjust</button>
-          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('filters');}}>Filters</button>
-          <button className={styles.toolButton} onClick={() => {
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('crop');}}>Crop</div>
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('resize');}}>Resize</div>
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('rotate');}}>Rotate and flip</div>
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('adjust');}}>Adjust</div>
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('filters');}}>Filters</div>
+          <div className={styles.toolButton} onClick={() => {
             confirmExit();
             setActiveTool("elements")
             setShowElementsModal((prev) => !prev);
           }}>
             Elements
-          </button>
+          </div>
           {showElementsModal && (
             <div className={styles.elementsModal} style={{ position: 'absolute', left: '200px', top: '100px' }}>
               <button className={styles.toolButton} onClick={() => addElement('text')}>Text</button>
@@ -440,13 +456,15 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             <>
             <ImageCropper
               imageToCrop={currentImage?.src || ''}
+              width={resizeWidth * canvasHeight/resizeHeight}
+              height={canvasHeight}
               cropScale={cropScale}
-              onImageCropped={(croppedImage) => setTempImage(croppedImage)}
+              onImageCropped={(croppedImage) => {setTempImage(croppedImage); setActiveChanges(true)}}
             />
             </>
           )}
           {/* Resize tool */}
-          {activeTool === 'resize' && (
+          {/* {activeTool === 'resize' && (
             <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
               <img
                 src={currentImage?.src || ""}
@@ -456,9 +474,22 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 alt="Resized"
               />
             </div>
+          )} */}
+
+          {activeTool === 'resize' && (
+            <ResizeTool
+              imageSrc={currentImage?.src || ""}
+              width={resizeWidth * canvasHeight/resizeHeight}
+              height={canvasHeight}
+              preserveAspectRatio={preserveAspectRatio}
+              onImageResized={(resizedImage) => {
+                setTempImage(resizedImage);
+                setActiveChanges(true);
+              }}
+            />
           )}
 
-          {/* Rotate tool */}
+          {/* Rotate tool
           {activeTool === 'rotate' && (
             <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
               <img
@@ -474,7 +505,23 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 }}
               />
             </div>
+          )} */}
+
+          {activeTool === 'rotate' && (
+            <RotateTool
+              imageSrc={currentImage?.src || ""}
+              width={resizeWidth * canvasHeight/resizeHeight}
+              height={canvasHeight}
+              rotateAngle={rotateAngle}
+              flipHorizontal={flipHorizontal}
+              flipVertical={flipVertical}
+              onImageRotated={(rotatedImage) => {
+                setTempImage(rotatedImage);
+                setActiveChanges(true);
+              }}
+            />
           )}
+
           {activeTool === 'adjust'&& (
             <AdjustTool
               imageSrc={currentImage?.src || ""}
@@ -482,14 +529,14 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               contrast={contrast}
               saturation={saturation}
               exposure={exposure}
-              onImageAdjusted={(tempImage) => setTempImage(tempImage)}
+              onImageAdjusted={(tempImage) => {setTempImage(tempImage); setActiveChanges(true)}}
             />
           )}
           {activeTool === 'filters' && (
             <FilterTool 
               imageSrc={currentImage?.src || ""} 
               selectedFilter={activeFilter}
-              onImageFiltered={(tempImage) => setTempImage(tempImage)}
+              onImageFiltered={(tempImage) => {setTempImage(tempImage); setActiveChanges(true)}}
             />
           )}
           {activeTool === 'elements' && (
@@ -588,11 +635,18 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
           <footer className={styles.footer}>
             <div className={styles.editTools}>
-              <button className={styles.toolButton} onClick={onCancel}>Cancel</button>
-              <button className={styles.toolButton} onClick={saveCurrentImage}>Apply</button>
-              <button className={styles.toolButton} onClick={downloadCurrentImage}>Save</button>
-              <button className={styles.toolButton}>Redo</button>
-              <button className={styles.toolButton}>Undo</button>
+              <div className={styles.buttonCategory}>
+                <div className={styles.revertButton}>Revert original</div>
+              </div>
+              <div className={styles.buttonCategory}>
+                <div className={styles.toolButton}>Redo</div>
+                <div className={styles.toolButton}>Undo</div>
+              </div>
+              <div className={styles.buttonCategory}>
+                <div className={styles.toolButton} onClick={onCancel}>Cancel</div>
+                <div className={styles.toolButton} onClick={saveCurrentImage}>Apply</div>
+                <div className={styles.toolButton} onClick={downloadCurrentImage}>Save</div>
+              </div>
             </div>
           </footer>
         </div>
