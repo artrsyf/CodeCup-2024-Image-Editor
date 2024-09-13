@@ -75,41 +75,41 @@ const ImageUploader: FC = () => {
   return (
     <div className={styles.uploadContainer}>
       {!isEditing ? (
-        <div 
+        <div
           className={`${styles.uploadZoneSize} ${dragOver ? styles.dragOver : ""} ${!isUploaded ? styles.uploadZoneAppearance : ""}`}
           onClick={!isUploaded ? () => document.getElementById('fileInput')?.click() : undefined}
           onDrop={!isUploaded ? handleDrop : undefined}
           onDragOver={!isUploaded ? handleDragOver : undefined}
           onDragLeave={!isUploaded ? handleDragLeave : undefined}
-          >
-            {image ? (
-              <>
-                <div className={styles.settingsPanel}>
-                  <span>Image</span>
-                  <button onClick={handleReplaceImage} className={styles.toolButton}>Replace</button>
-                  <button onClick={handleOpenEditor} className={styles.toolButton}>Edit</button>
-                  <button onClick={handleDeleteImage} className={styles.toolButton}>Delete</button>
-                </div>
+        >
+          {image ? (
+            <>
+              <div className={styles.settingsPanel}>
+                <span>Image</span>
+                <button onClick={handleReplaceImage} className={styles.toolButton}>Replace</button>
+                <button onClick={handleOpenEditor} className={styles.toolButton}>Edit</button>
+                <button onClick={handleDeleteImage} className={styles.toolButton}>Delete</button>
+              </div>
+              <div className={styles.canvasContainer}>
                 <img src={image} alt="Uploaded" className={styles.uploadedImage} />
-              </>
-            ) : (
-              <p>Перетащите сюда изображение или нажмите, чтобы выбрать файл</p>
-            )}
+              </div>
+            </>
+          ) : (
+            <p>Перетащите сюда изображение или нажмите, чтобы выбрать файл</p>
+          )}
         </div>
       ) : (
-        image && (
-          <ImageProcessor imageSrc={image} onCancel={handleCancelEdit} />
-        )
+        image && <ImageProcessor imageSrc={image} onCancel={handleCancelEdit} />
       )}
       <input
-          type="file"
-          id="fileInput"
-          className={styles.hiddenFileInput}
-          accept="image/jpeg, image/png"
-          onChange={handleFileChange}
-        />
+        type="file"
+        id="fileInput"
+        className={styles.hiddenFileInput}
+        accept="image/jpeg, image/png"
+        onChange={handleFileChange}
+      />
     </div>
-  )
+  );
 }
 
 export default ImageUploader;

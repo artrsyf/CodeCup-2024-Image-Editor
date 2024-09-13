@@ -199,7 +199,12 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             <label htmlFor="scaleSelect" className={styles.scaleLabel}>
               Crop ratio
             </label>
-            <select id="scaleSelect" onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {setCropScale(parseFloat(event.target.value));}} className={styles.scaleSelect}>
+            <select 
+              id="scaleSelect" 
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {setCropScale(parseFloat(event.target.value));}} 
+              className={styles.scaleSelect}
+              defaultValue="1"
+            >
               <option value="1">1:1</option>
               <option value="1.778">16:9</option>
               <option value="1.333">4:3</option>
@@ -358,6 +363,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     <div className={styles.imageProcessorContainer}>
       <header className={styles.header}>
         <div>Image Editor</div>
+        {/* <img src={tempImage?.src}></img> */}
       </header>
 
       <div className={styles.contentWrapper}>
@@ -526,7 +532,11 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               </Layer>
             </Stage>
           )}
-          {activeTool === null && <div><img src={currentImage?.src} alt="Uploaded"/></div>}
+          {activeTool === null && (
+            <div className={styles.canvasContainer}>
+              <img className={styles.uploadedImage} src={currentImage?.src} alt="Uploaded"/>
+            </div>
+          )}
 
           <footer className={styles.footer}>
             <div className={styles.editTools}>
