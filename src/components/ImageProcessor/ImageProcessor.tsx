@@ -54,6 +54,30 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const [editingText, setEditingText] = useState<any>(null);
 
+  const canvasContainerRef = useRef<HTMLDivElement>(null); // Ref для контейнера канваса
+
+  const [canvasWidth, setCanvasWidth] = useState<number>(0);
+  const [canvasHeight, setCanvasHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (canvasContainerRef.current) {
+        const { offsetWidth, offsetHeight } = canvasContainerRef.current;
+        setCanvasWidth(offsetWidth);
+        setCanvasHeight(offsetHeight);
+      }
+    };
+
+    updateCanvasSize();
+
+    // Слушаем изменение размеров окна для обновления размеров канваса
+    window.addEventListener('resize', updateCanvasSize);
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, [resizeWidth, resizeHeight]);
+
+
   // Начальная установка текущей пикчи
   useEffect(() => {
     const img = new window.Image();
@@ -402,12 +426,12 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           )}
           {/* Resize tool */}
           {activeTool === 'resize' && (
-            <div>
+            <div className={styles.canvasContainer} ref={canvasContainerRef}>
               <img
                 src={currentImage?.src || ""}
-                className={preserveAspectRatio ? styles.saveConstrainResizeImage : ""}
-                height={resizeHeight}
-                width={resizeWidth}
+                className={`${preserveAspectRatio ? styles.saveConstrainResizeImage : ""}`}
+                height={canvasHeight}
+                width={canvasWidth}
                 alt="Resized"
               />
             </div>
@@ -415,9 +439,10 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
           {/* Rotate tool */}
           {activeTool === 'rotate' && (
-            <div>
+            <div className={styles.canvasContainer} ref={canvasContainerRef}>
               <img
                 src={currentImage?.src || ""}
+                className={styles.uploadedImage}
                 alt="Rotated"
                 style={{
                   transform: `
@@ -447,15 +472,15 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             />
           )}
           {activeTool === 'elements' && (
-            <Stage width={currentImage?.width} height={currentImage?.height} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
+            <Stage width={canvasWidth} height={canvasHeight} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
               <Layer>
                 {imageSrc && (
                   <KonvaImage
                     image={currentImage}
                     x={0}
                     y={0}
-                    width={currentImage?.width}
-                    height={currentImage?.height}
+                    width={canvasWidth}
+                    height={canvasHeight}
                     listening={false} // Disable interactions with the image
                   />
                 )}
@@ -533,7 +558,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             </Stage>
           )}
           {activeTool === null && (
-            <div className={styles.canvasContainer}>
+            <div className={styles.canvasContainer} ref={canvasContainerRef}>
               <img className={styles.uploadedImage} src={currentImage?.src} alt="Uploaded"/>
             </div>
           )}
