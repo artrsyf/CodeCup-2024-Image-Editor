@@ -83,17 +83,19 @@ const ImageUploader: FC = () => {
           onDragLeave={!isUploaded ? handleDragLeave : undefined}
         >
           {image ? (
-            <>
-              <div className={styles.settingsPanel}>
-                <span>Image</span>
-                <button onClick={handleReplaceImage} className={styles.toolButton}>Replace</button>
-                <button onClick={handleOpenEditor} className={styles.toolButton}>Edit</button>
-                <button onClick={handleDeleteImage} className={styles.toolButton}>Delete</button>
+            <div className={styles.functionalWrapper}>
+              <div className={styles.settingsPanelWrapper}>
+                <div className={styles.settingsPanel}>
+                  <div className={styles.toolButton}>Image</div>
+                  <div onClick={handleReplaceImage} className={styles.toolButton}>Replace</div>
+                  <div onClick={handleOpenEditor} className={styles.toolButton}>Edit</div>
+                  <div onClick={handleDeleteImage} className={styles.toolButton}>Delete</div>
+                </div>
               </div>
               <div className={styles.canvasContainer}>
                 <img src={image} alt="Uploaded" className={styles.uploadedImage} />
               </div>
-            </>
+            </div>
           ) : (
             <p>Перетащите сюда изображение или нажмите, чтобы выбрать файл</p>
           )}
