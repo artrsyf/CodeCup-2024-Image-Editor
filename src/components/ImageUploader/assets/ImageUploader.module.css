@@ -4,7 +4,7 @@
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: #895555;
+    background-color: white;
 }
 
 .uploadZoneSize {
@@ -22,7 +22,7 @@
     border-radius: 8px;
     cursor: pointer;
     transition: border-color 0.3s ease;
-    background-color: #fff;
+    background-color: white;
 }
 
 .uploadZoneAppearance:hover, .dragOver{
@@ -33,9 +33,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 70vw;
+    max-width: 70vw;
     height: 70vh;
-    background-color: black;
+    background-color: white;
     overflow: hidden;
     position: relative;
 }
@@ -48,4 +48,39 @@
 
 .hiddenFileInput {
     display: none;
+}
+
+.settingsPanelWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.settingsPanel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.toolButton {
+    padding: 8px;
+    outline: none;
+    border-style: none;
+    background-color: white;
+    color: gray;
+    cursor: pointer;
+    transform: none;
+    border: 1px solid transparent;
+}
+
+.toolButton:hover {
+    border: solid 1px rgb(228, 228, 228);
+}
+
+.functionalWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
