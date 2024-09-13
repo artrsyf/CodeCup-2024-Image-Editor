@@ -24,7 +24,7 @@ const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onIma
           const imgAspectRatio = image.width / image.height;
           const newWidth = containerHeight * imgAspectRatio;
           setStageSize({
-            width: Math.max(newWidth, container.clientWidth), // Убедитесь, что ширина не меньше ширины контейнера
+            width: newWidth, // Убедитесь, что ширина не меньше ширины контейнера
             height: containerHeight,
           });
         }
@@ -84,7 +84,7 @@ const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onIma
                 onImageFiltered(newImage);
             };
         }
-    }, [image, selectedFilter, onImageFiltered]);
+    }, [image, selectedFilter]);
 
     return (
         <div className={styles.canvasContainer}>

@@ -27,7 +27,7 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, brightness, contrast,
       const imgAspectRatio = image.width / image.height;
       const newWidth = containerHeight * imgAspectRatio;
       setStageSize({
-        width: Math.max(newWidth, container.clientWidth), // Убедитесь, что ширина не меньше ширины контейнера
+        width: newWidth, // Убедитесь, что ширина не меньше ширины контейнера
         height: containerHeight,
       });
     }
@@ -77,7 +77,7 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, brightness, contrast,
         onImageAdjusted(newImage);
       };
     }
-  }, [image, brightness, contrast, saturation, exposure, onImageAdjusted]);
+  }, [image, brightness, contrast, saturation, exposure]);
 
   return (
     <div className={styles.canvasContainer}>

@@ -20,6 +20,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
+  // Ref to track initialization to avoid re-running on mount
+  const initializedRef = useRef(false);
+
   const cropImage = useCallback(
     async (crop: PixelCrop) => {
       if (imageRef.current && crop.width && crop.height) {
@@ -88,7 +91,10 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
   };
 
   useEffect(() => {
+    if (initializedRef.current) return; // Prevent rerun after first render
     if (imageDimensions) {
+      initializedRef.current = true; // Mark as initialized
+
       let width = imageDimensions.width;
       let height = imageDimensions.height;
 
@@ -109,22 +115,19 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
       };
 
       setCropConfig(initialCrop);
-      if (imageRef.current) {
-        cropImage(initialCrop);
-      }
+      cropImage(initialCrop); // This is only called once when imageDimensions is set
     }
   }, [imageDimensions, cropScale, cropImage]);
 
   return (
     <ReactCrop
       crop={cropConfig}
-      onChange={(newCropConfig) => {
-        setCropConfig(newCropConfig);
-        if (imageRef.current) {
-          cropImage(newCropConfig);
+      onChange={(newCropConfig) => setCropConfig(newCropConfig)}
+      onComplete={(finalCrop) => {
+        if (finalCrop.width && finalCrop.height) {
+          cropImage(finalCrop);
         }
       }}
-      onComplete={cropImage}
       ruleOfThirds
     >
       <div className={styles.canvasContainer}>
