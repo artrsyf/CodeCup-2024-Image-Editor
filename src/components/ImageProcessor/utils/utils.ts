@@ -29,6 +29,7 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     tr.hide();
 
     var textPosition = textNode.absolutePosition();
+    console.log(textPosition)
 
     // so position of textarea will be the sum of positions above:
     var areaPosition = {
@@ -37,7 +38,8 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     };
 
     var textarea = document.createElement('textarea');
-    document.body.appendChild(textarea);
+    const canvasContainer = document.getElementById("canvasContainer")
+    canvasContainer?.appendChild(textarea)
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';

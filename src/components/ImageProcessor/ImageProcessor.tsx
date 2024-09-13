@@ -447,7 +447,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           )}
           {/* Resize tool */}
           {activeTool === 'resize' && (
-            <div className={styles.canvasContainer} ref={canvasContainerRef}>
+            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
               <img
                 src={currentImage?.src || ""}
                 className={`${preserveAspectRatio ? styles.saveConstrainResizeImage : ""}`}
@@ -460,7 +460,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
           {/* Rotate tool */}
           {activeTool === 'rotate' && (
-            <div className={styles.canvasContainer} ref={canvasContainerRef}>
+            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
               <img
                 src={currentImage?.src || ""}
                 className={styles.uploadedImage}
@@ -493,7 +493,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             />
           )}
           {activeTool === 'elements' && (
-            <div className={styles.canvasContainer} ref={canvasContainerRef}>
+            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
             <Stage width={currentImage && currentImage.width * canvasHeight / currentImage.height} height={canvasHeight} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
               <Layer>
                 {imageSrc && (
@@ -581,7 +581,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             </div>
           )}
           {activeTool === null && (
-            <div className={styles.canvasContainer} ref={canvasContainerRef}>
+            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
               <img className={styles.uploadedImage} src={currentImage?.src} alt="Uploaded"/>
             </div>
           )}
