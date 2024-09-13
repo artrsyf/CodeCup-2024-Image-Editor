@@ -1,16 +1,17 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import styles from './assets/ImageProcessor.module.css';
 
 interface ImageCropperProps {
   imageToCrop: string;
   cropScale: number;
-  onImageCropped: (croppedImage: HTMLImageElement) => void; // измененный тип пропса
+  onImageCropped: (croppedImage: HTMLImageElement) => void;
 }
 
 const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onImageCropped }) => {
   const [cropConfig, setCropConfig] = useState<Crop>({
-    unit: '%',
+    unit: 'px',
     x: 0,
     y: 0,
     width: 100,
@@ -24,7 +25,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
       if (imageRef.current && crop.width && crop.height) {
         try {
           const croppedImage = await getCroppedImage(imageRef.current, crop);
-          onImageCropped(croppedImage); // вызов с передачей изображения в родительский компонент
+          onImageCropped(croppedImage);
         } catch (error) {
           console.error('Error cropping image:', error);
         }
@@ -88,39 +89,54 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
 
   useEffect(() => {
     if (imageDimensions) {
-      setCropConfig({
+      let width = imageDimensions.width;
+      let height = imageDimensions.height;
+
+      if (cropScale === 1) {
+        const size = Math.min(width, height);
+        width = size;
+        height = size;
+      } else {
+        height = width / cropScale;
+      }
+
+      const initialCrop: PixelCrop = {
         unit: 'px',
         x: 0,
         y: 0,
-        width: imageDimensions.width,
-        height: imageDimensions.height,
-      });
-    }
-  }, [imageDimensions]);
+        width,
+        height,
+      };
 
-  useEffect(() => {
-    setCropConfig((prev) => ({
-      ...prev,
-      cropScale,
-      width: prev.width,
-      height: prev.width / cropScale,
-    }));
-  }, [cropScale]);
+      setCropConfig(initialCrop);
+      if (imageRef.current) {
+        cropImage(initialCrop);
+      }
+    }
+  }, [imageDimensions, cropScale, cropImage]);
 
   return (
     <ReactCrop
       crop={cropConfig}
-      onChange={(newCropConfig) => setCropConfig(newCropConfig)}
+      onChange={(newCropConfig) => {
+        setCropConfig(newCropConfig);
+        if (imageRef.current) {
+          cropImage(newCropConfig);
+        }
+      }}
       onComplete={cropImage}
       ruleOfThirds
     >
-      <img
-        src={imageToCrop}
-        ref={imageRef}
-        onLoad={(e) => onImageLoaded(e.currentTarget)}
-        alt="Crop me"
-        style={{ maxWidth: '100%' }}
-      />
+      <div className={styles.canvasContainer}>
+        <img
+          src={imageToCrop}
+          className={styles.uploadedImage}
+          ref={imageRef}
+          onLoad={(e) => onImageLoaded(e.currentTarget)}
+          alt="Crop me"
+          style={{ maxWidth: '100%' }}
+        />
+      </div>
     </ReactCrop>
   );
 };
