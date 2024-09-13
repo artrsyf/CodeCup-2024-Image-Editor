@@ -315,10 +315,37 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       setFlipHorizontal(false);
       setFlipVertical(false);
       setRotateAngle(0);
-
     }
   };
 
+  const downloadCurrentImage = () => {
+    if (!currentImage) return; // Check if the image exists
+
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size to match the current image size
+    canvas.width = currentImage.width;
+    canvas.height = currentImage.height;
+
+    // Draw the image on the canvas
+    ctx?.drawImage(currentImage, 0, 0, currentImage.width, currentImage.height);
+
+    // Convert the canvas content to a data URL (base64 format)
+    const dataURL = canvas.toDataURL('image/png'); // You can change the format if needed
+
+    // Create an anchor element for downloading the image
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'downloaded_image.png'; // Set the filename for the downloaded image
+
+    // Programmatically click the link to trigger the download
+    link.click();
+
+    // Clean up by removing the link element
+    link.remove();
+  };
   useEffect(() => {
     produceRotatedTempImage(currentImage, canvasRef, rotateAngle, flipHorizontal, flipVertical, setTempImage)
   }, [flipHorizontal, flipVertical, rotateAngle])
@@ -504,7 +531,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           <footer className={styles.footer}>
             <div className={styles.editTools}>
               <button className={styles.toolButton} onClick={onCancel}>Cancel</button>
-              <button className={styles.toolButton} onClick={saveCurrentImage}>Save</button>
+              <button className={styles.toolButton} onClick={saveCurrentImage}>Apply</button>
+              <button className={styles.toolButton} onClick={downloadCurrentImage}>Save</button>
               <button className={styles.toolButton}>Redo</button>
               <button className={styles.toolButton}>Undo</button>
             </div>
