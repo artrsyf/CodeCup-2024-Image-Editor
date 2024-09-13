@@ -1,28 +1,79 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import styles from './assets/ImageProcessor.module.css';
 
 interface ImageCropperProps {
   imageToCrop: string;
+  width: number;
+  height: number;
   cropScale: number;
   onImageCropped: (croppedImage: HTMLImageElement) => void;
 }
 
-const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onImageCropped }) => {
+const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, width, height, cropScale, onImageCropped }) => {
   const [cropConfig, setCropConfig] = useState<Crop>({
     unit: 'px',
     x: 0,
     y: 0,
-    width: 100,
-    height: 100,
+    width: width,
+    height: height,
   });
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Ref to track initialization to avoid re-running on mount
-  const initializedRef = useRef(false);
+  // Загружаем изображение и устанавливаем размеры
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = imageToCrop;
+    img.onload = () => {
+      setImageDimensions({
+        width: img.width,
+        height: img.height,
+      });
+    };
+  }, [imageToCrop]);
 
+  // // Обновляем размеры обрезки при изменении размера контейнера или масштаба
+  // useEffect(() => {
+  //     if (cropScale == 1) {
+  //       const cropWidth = height;
+  //       const cropHeight = height
+  //       setCropConfig((prev) => ({
+  //         unit: 'px',
+  //         x: 0,
+  //         y: 0,
+  //         width: cropWidth,
+  //         height: cropHeight,
+  //       }));
+  //     } else if (cropScale == -1) {
+  //       const cropWidth = width;
+  //       const cropHeight = height
+  //       setCropConfig((prev) => ({
+  //         unit: 'px',
+  //         x: 0,
+  //         y: 0,
+  //         width: cropWidth,
+  //         height: cropHeight,
+  //       }));
+  //     } else {
+  //       const cropWidth = width;
+  //       const cropHeight = width / cropScale;
+  //       setCropConfig((prev) => ({
+  //         unit: 'px',
+  //         x: 0,
+  //         y: 0,
+  //         width: cropWidth,
+  //         height: cropHeight,
+  //       }));
+  //     }
+      
+
+  // }, [containerSize, cropScale]);
+
+  // Функция для обрезки изображения
   const cropImage = useCallback(
     async (crop: PixelCrop) => {
       if (imageRef.current && crop.width && crop.height) {
@@ -37,6 +88,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
     [onImageCropped]
   );
 
+
+  useEffect(() => {
+    setCropConfig((prev) => ({
+      ...prev,
+      cropScale,
+      width: prev.width,
+      height: prev.width / cropScale,
+    }));
+  }, [cropScale]);
+
+  // Функция для получения обрезанного изображения
   const getCroppedImage = (
     sourceImage: HTMLImageElement,
     cropConfig: PixelCrop
@@ -82,65 +144,23 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, cropScale, onI
     });
   };
 
-  const onImageLoaded = (image: HTMLImageElement) => {
-    imageRef.current = image;
-    setImageDimensions({
-      width: image.width,
-      height: image.height,
-    });
-  };
-
-  useEffect(() => {
-    if (initializedRef.current) return; // Prevent rerun after first render
-    if (imageDimensions) {
-      initializedRef.current = true; // Mark as initialized
-
-      let width = imageDimensions.width;
-      let height = imageDimensions.height;
-
-      if (cropScale === 1) {
-        const size = Math.min(width, height);
-        width = size;
-        height = size;
-      } else {
-        height = width / cropScale;
-      }
-
-      const initialCrop: PixelCrop = {
-        unit: 'px',
-        x: 0,
-        y: 0,
-        width,
-        height,
-      };
-
-      setCropConfig(initialCrop);
-      cropImage(initialCrop); // This is only called once when imageDimensions is set
-    }
-  }, [imageDimensions, cropScale, cropImage]);
-
   return (
-    <ReactCrop
-      crop={cropConfig}
-      onChange={(newCropConfig) => setCropConfig(newCropConfig)}
-      onComplete={(finalCrop) => {
-        if (finalCrop.width && finalCrop.height) {
-          cropImage(finalCrop);
-        }
-      }}
-      ruleOfThirds
-    >
-      <div className={styles.canvasContainer}>
+    <div className={styles.canvasContainer} ref={containerRef}>
+      <ReactCrop
+        crop={cropConfig}
+        onChange={(newCropConfig) => setCropConfig(newCropConfig)}
+        onComplete={cropImage}
+        ruleOfThirds
+      >
         <img
           src={imageToCrop}
-          className={styles.uploadedImage}
+          width={width}
+          height={height}
           ref={imageRef}
-          onLoad={(e) => onImageLoaded(e.currentTarget)}
           alt="Crop me"
-          style={{ maxWidth: '100%' }}
         />
-      </div>
-    </ReactCrop>
+      </ReactCrop>
+    </div>
   );
 };
 
