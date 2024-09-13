@@ -56,14 +56,14 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const canvasContainerRef = useRef<HTMLDivElement>(null); // Ref для контейнера канваса
 
-  const [canvasWidth, setCanvasWidth] = useState<number>(0);
   const [canvasHeight, setCanvasHeight] = useState<number>(0);
+
+  const [activeChanges, setActiveChanges] = useState<boolean>(false)
 
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasContainerRef.current) {
         const { offsetWidth, offsetHeight } = canvasContainerRef.current;
-        setCanvasWidth(offsetWidth);
         setCanvasHeight(offsetHeight);
       }
     };
@@ -84,10 +84,13 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     img.src = imageSrc;
     img.onload = () => {
       setCurrentImage(img);
+      
       setTempImage(img);
 
       setResizeHeight(img.height);
       setResizeWidth(img.width);
+      
+      setActiveChanges(false);
     };
   }, [imageSrc]);
 
@@ -335,15 +338,33 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     }
   };
 
+  const clearChanges = () => {
+    setElements([])
+    setFlipHorizontal(false);
+    setFlipVertical(false);
+    setRotateAngle(0);
+    setActiveTool(null);
+    setShowElementsModal(false);
+    setActiveChanges(false);
+  }
+
+  const confirmExit = () => {
+    if (activeChanges) {
+      const userConfirmed = window.confirm("You have unsaved changes. Do you want to save them?");
+      if (userConfirmed) {
+        saveCurrentImage();
+      } else {
+        clearChanges();
+      }
+    } else {
+      clearChanges();
+    }
+  };
+
   const saveCurrentImage = () => {
     if (tempImage) {
       setCurrentImage(tempImage);
-      
-      //TODO CLEANER?
-      setElements([])
-      setFlipHorizontal(false);
-      setFlipVertical(false);
-      setRotateAngle(0);
+      clearChanges();
     }
   };
 
@@ -376,7 +397,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     link.remove();
   };
   useEffect(() => {
-    produceRotatedTempImage(currentImage, canvasRef, rotateAngle, flipHorizontal, flipVertical, setTempImage)
+    // produceRotatedTempImage(currentImage, canvasRef, rotateAngle, flipHorizontal, flipVertical, setTempImage)
   }, [flipHorizontal, flipVertical, rotateAngle])
 
   useEffect(() => {
@@ -387,18 +408,18 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     <div className={styles.imageProcessorContainer}>
       <header className={styles.header}>
         <div>Image Editor</div>
-        {/* <img src={tempImage?.src}></img> */}
       </header>
 
       <div className={styles.contentWrapper}>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <div className={styles.leftMenu}>
-          <button className={styles.toolButton} onClick={() => setActiveTool('crop')}>Crop</button>
-          <button className={styles.toolButton} onClick={() => setActiveTool('resize')}>Resize</button>
-          <button className={styles.toolButton} onClick={() => setActiveTool('rotate')}>Rotate and flip</button>
-          <button className={styles.toolButton} onClick={() => setActiveTool('adjust')}>Adjust</button>
-          <button className={styles.toolButton} onClick={() => setActiveTool('filters')}>Filters</button>
+          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('crop');}}>Crop</button>
+          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('resize');}}>Resize</button>
+          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('rotate');}}>Rotate and flip</button>
+          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('adjust');}}>Adjust</button>
+          <button className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('filters');}}>Filters</button>
           <button className={styles.toolButton} onClick={() => {
+            confirmExit();
             setActiveTool("elements")
             setShowElementsModal((prev) => !prev);
           }}>
@@ -431,7 +452,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 src={currentImage?.src || ""}
                 className={`${preserveAspectRatio ? styles.saveConstrainResizeImage : ""}`}
                 height={canvasHeight}
-                width={canvasWidth}
+                width={resizeWidth * canvasHeight/resizeHeight}
                 alt="Resized"
               />
             </div>
@@ -472,14 +493,15 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             />
           )}
           {activeTool === 'elements' && (
-            <Stage width={canvasWidth} height={canvasHeight} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
+            <div className={styles.canvasContainer} ref={canvasContainerRef}>
+            <Stage width={currentImage && currentImage.width * canvasHeight / currentImage.height} height={canvasHeight} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
               <Layer>
                 {imageSrc && (
                   <KonvaImage
                     image={currentImage}
                     x={0}
                     y={0}
-                    width={canvasWidth}
+                    width={currentImage && currentImage.width * canvasHeight / currentImage.height}
                     height={canvasHeight}
                     listening={false} // Disable interactions with the image
                   />
@@ -556,6 +578,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 )}
               </Layer>
             </Stage>
+            </div>
           )}
           {activeTool === null && (
             <div className={styles.canvasContainer} ref={canvasContainerRef}>
