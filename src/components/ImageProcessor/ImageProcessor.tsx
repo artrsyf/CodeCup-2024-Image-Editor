@@ -1,6 +1,7 @@
 import React, { FC, useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Line, Circle, Rect, Transformer, Image as KonvaImage } from 'react-konva';
 import Konva from 'konva';
+import { Select, Option } from '@material-tailwind/react';
 
 import ImageCropper from "./ImageCropper";
 import AdjustTool from "./AdjustTool"
@@ -226,20 +227,20 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       case 'crop':
         return (
           <>
-            <label htmlFor="scaleSelect" className={styles.scaleLabel}>
-              Crop ratio
-            </label>
-            <select 
-              id="scaleSelect" 
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {setCropScale(parseFloat(event.target.value));}} 
-              className={styles.scaleSelect}
-              defaultValue="-1"
+            {/* @ts-ignore */}
+            <Select
+              className="min-w-full !min-w-full"
+              label="Crop ratio"
+              onChange={(value: string | undefined) => setCropScale(parseFloat(value ?? "1"))}
+              color="blue"
+              containerProps={{
+                className: "min-w-0",
+              }}
             >
-              <option value="-1">None</option>
-              <option value="1">1:1</option>
-              <option value="1.778">16:9</option>
-              <option value="1.333">4:3</option>
-            </select>
+              <Option value="1">1:1</Option>
+              <Option value="1.778">16:9</Option>
+              <Option value="1.333">4:3</Option>
+            </Select>
           </>
         );
       case 'resize':
@@ -424,29 +425,116 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     <div className={styles.imageProcessorContainer}>
       <header className={styles.header}>
         <div>Image Editor</div>
+        <div className={styles.cancelButton} onClick={onCancel}>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="16" fill="#F2F5F7"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M17.4142 16L21.7072 11.707C22.0982 11.316 22.0982 10.684 21.7072 10.293C21.3162 9.90201 20.6842 9.90201 20.2933 10.293L16.0002 14.586L11.7072 10.293C11.3162 9.90201 10.6842 9.90201 10.2932 10.293C9.90225 10.684 9.90225 11.316 10.2932 11.707L14.5862 16L10.2932 20.293C9.90225 20.684 9.90225 21.316 10.2932 21.707C10.4882 21.902 10.7442 22 11.0002 22C11.2563 22 11.5122 21.902 11.7072 21.707L16.0002 17.414L20.2933 21.707C20.4882 21.902 20.7443 22 21.0002 22C21.2562 22 21.5122 21.902 21.7072 21.707C22.0982 21.316 22.0982 20.684 21.7072 20.293L17.4142 16Z" fill="#202020"/>
+          </svg>
+        </div>
       </header>
 
       <div className={styles.contentWrapper}>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <div className={styles.leftMenu}>
-          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('crop');}}>Crop</div>
-          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('resize');}}>Resize</div>
-          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('rotate');}}>Rotate and flip</div>
-          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('adjust');}}>Adjust</div>
-          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('filters');}}>Filters</div>
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('crop');}}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.09176 2L6 12.5882C6 12.9627 6.14874 13.3217 6.4135 13.5865C6.67825 13.8513 7.03734 14 7.41176 14H18" stroke={activeTool && activeTool == 'crop' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 6.09176L12.5882 6C12.9627 6 13.3217 6.14874 13.5865 6.4135C13.8513 6.67825 14 7.03734 14 7.41176V18" stroke={activeTool && activeTool == 'crop' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div className={activeTool && activeTool == 'crop' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Crop</div>
+          </div>
+
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('resize');}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 2H18V7" stroke={activeTool && activeTool == 'resize' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 18H2V13" stroke={activeTool && activeTool == 'resize' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18 2L12 8" stroke={activeTool && activeTool == 'resize' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 18L8 12" stroke={activeTool && activeTool == 'resize' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div className={activeTool && activeTool == 'resize' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Resize</div>
+          </div>
+
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('rotate');}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2L17 5L14 8" stroke={activeTool && activeTool == 'rotate' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 10V8.33333C3 7.44928 3.30436 6.60143 3.84614 5.97631C4.38791 5.35119 5.12271 5 5.88889 5H16" stroke={activeTool && activeTool == 'rotate' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 18L3 15L6 12" stroke={activeTool && activeTool == 'rotate' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 10V11.6667C17 12.5507 16.6722 13.3986 16.0888 14.0237C15.5053 14.6488 14.714 15 13.8889 15H3" stroke={activeTool && activeTool == 'rotate' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div className={activeTool && activeTool == 'rotate' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Rotate and flip</div>
+          </div>
+
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('adjust');}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6L9 6" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 6L17 6" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 14L10 14" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13 14L17 14" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 4L9 8" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13 12L13 16" stroke={activeTool && activeTool == 'adjust' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div className={activeTool && activeTool == 'adjust' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Adjust</div>
+          </div>
+
+          <div className={styles.toolButton} onClick={() => {confirmExit(); setActiveTool('filters');}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="6.99998" r="5" stroke={activeTool && activeTool == 'filters' ? "#12A3F8" : "#7B828E"} stroke-width="2"/>
+              <circle cx="7" cy="13" r="5" stroke={activeTool && activeTool == 'filters' ? "#12A3F8" : "#7B828E"} stroke-width="2"/>
+              <circle cx="13" cy="13" r="5" stroke={activeTool && activeTool == 'filters' ? "#12A3F8" : "#7B828E"} stroke-width="2"/>
+            </svg>
+            <div className={activeTool && activeTool == 'filters' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Filters</div>
+          </div>
           <div className={styles.toolButton} onClick={() => {
             confirmExit();
             setActiveTool("elements")
             setShowElementsModal((prev) => !prev);
           }}>
-            Elements
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 2L12.472 6.93691L18 7.73344L14 11.5741L14.944 17L10 14.4369L5.056 17L6 11.5741L2 7.73344L7.528 6.93691L10 2Z" stroke={activeTool && activeTool == 'elements' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div className={activeTool && activeTool == 'elements' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Elements</div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 17L15 12L10 7.00002" stroke={activeTool && activeTool == 'elements' ? "#12A3F8" : "#7B828E"} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
           {showElementsModal && (
-            <div className={styles.elementsModal} style={{ position: 'absolute', left: '200px', top: '100px' }}>
-              <button className={styles.toolButton} onClick={() => addElement('text')}>Text</button>
-              <button className={styles.toolButton} onClick={() => addElement('line')}>Line</button>
-              <button className={styles.toolButton} onClick={() => addElement('circle')}>Circle</button>
-              <button className={styles.toolButton} onClick={() => addElement('rect')}>Square</button>
+            <div className={styles.elementsModal} style={{ position: 'absolute', left: '240px', top: '210px' }}>
+              <div className={styles.figureButton} onClick={() => addElement('text')}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1C0 0.447715 0.447715 0 1 0H39C39.5523 0 40 0.447715 40 1V8C40 8.55228 39.5523 9 39 9C38.4477 9 38 8.55228 38 8V2H2V8C2 8.55228 1.55228 9 1 9C0.447715 9 0 8.55228 0 8V1Z" fill="#12A3F8"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 39C12 38.4477 12.4477 38 13 38H27C27.5523 38 28 38.4477 28 39C28 39.5523 27.5523 40 27 40H13C12.4477 40 12 39.5523 12 39Z" fill="#12A3F8"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M20 0C20.5523 0 21 0.447715 21 1V39C21 39.5523 20.5523 40 20 40C19.4477 40 19 39.5523 19 39V1C19 0.447715 19.4477 0 20 0Z" fill="#12A3F8"/>
+                </svg>
+                <div className={styles.figureButtonText}>Text</div>
+              </div>
+              <div className={styles.figureButton} onClick={() => addElement('line')}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" fill="white"/>
+                  <line y1="19" x2="40" y2="19" stroke="#12A3F8" stroke-width="2"/>
+                </svg>
+                <div className={styles.figureButtonText}>Line</div>
+              </div>
+              <div className={styles.figureButton} onClick={() => addElement('circle')}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g clip-path="url(#clip0_137_14805)">
+                  <rect width="40" height="40" fill="white"/>
+                  <circle cx="20" cy="20" r="20" fill="#12A3F8"/>
+                  </g>
+                  <defs>
+                  <clipPath id="clip0_137_14805">
+                  <rect width="40" height="40" fill="white"/>
+                  </clipPath>
+                  </defs>
+                </svg>
+                <div className={styles.figureButtonText}>Circle</div>
+              </div>
+              <div className={styles.figureButton} onClick={() => addElement('rect')}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" fill="white"/>
+                  <rect y="7" width="40" height="25" fill="#12A3F8"/>
+                </svg>
+                <div className={styles.figureButtonText}>Square</div>
+              </div>
             </div>
           )}
         </div>
@@ -639,13 +727,21 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 <div className={styles.revertButton}>Revert original</div>
               </div>
               <div className={styles.buttonCategory}>
-                <div className={styles.toolButton}>Redo</div>
-                <div className={styles.toolButton}>Undo</div>
+                <div className={styles.redoUndoButton}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.6248 3.09364C13.5903 2.80347 15.5899 3.19227 17.3203 4.19602C19.0497 5.19922 20.4125 6.75943 21.2123 8.63361C22.0119 10.5073 22.2087 12.5997 21.7753 14.598C21.3419 16.5966 20.2995 18.4015 18.7959 19.7365C17.2915 21.0723 15.4071 21.8644 13.4252 21.9841C11.4431 22.1038 9.48203 21.5437 7.83826 20.3956C6.19543 19.2482 4.96089 17.5779 4.31117 15.6428C4.13538 15.1193 4.4173 14.5523 4.94086 14.3765C5.46442 14.2007 6.03136 14.4827 6.20715 15.0062C6.72462 16.5474 7.70234 17.8612 8.98348 18.756C10.2637 19.6502 11.78 20.0799 13.3046 19.9878C14.8294 19.8957 16.2911 19.286 17.468 18.241C18.6458 17.1952 19.4748 15.7694 19.8208 14.1741C20.1668 12.5786 20.0088 10.9088 19.3728 9.41863C18.7371 7.92897 17.6614 6.706 16.3168 5.92604C14.9731 5.14662 13.4296 4.84887 11.9169 5.0722C10.4037 5.29559 8.99272 6.02998 7.89962 7.17503C7.89266 7.18233 7.88558 7.18952 7.8784 7.1966L5.43849 9.60235H8.40038C8.95267 9.60235 9.40038 10.0501 9.40038 10.6024C9.40038 11.1546 8.95267 11.6024 8.40038 11.6024H3C2.44772 11.6024 2 11.1546 2 10.6024V4.93569C2 4.38341 2.44772 3.93569 3 3.93569C3.55228 3.93569 4 4.38341 4 4.93569V8.212L6.46372 5.78278C7.85502 4.33021 9.66475 3.383 11.6248 3.09364Z" fill="#7B828E"/>
+                  </svg>
+                </div>
+                <div className={styles.applyButton} onClick={saveCurrentImage}>Apply</div>
+                <div className={styles.redoUndoButton}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3752 3.09364C10.4097 2.80347 8.41011 3.19227 6.67971 4.19602C4.95026 5.19922 3.58748 6.75943 2.78767 8.63361C1.98806 10.5073 1.79129 12.5997 2.22466 14.598C2.65809 16.5966 3.70045 18.4015 5.20407 19.7365C6.7085 21.0723 8.59294 21.8644 10.5748 21.9841C12.5569 22.1038 14.518 21.5437 16.1617 20.3956C17.8046 19.2482 19.0391 17.5779 19.6888 15.6428C19.8646 15.1193 19.5827 14.5523 19.0591 14.3765C18.5356 14.2007 17.9686 14.4827 17.7928 15.0062C17.2754 16.5474 16.2977 17.8612 15.0165 18.756C13.7363 19.6502 12.22 20.0799 10.6954 19.9878C9.1706 19.8957 7.70891 19.286 6.53196 18.241C5.3542 17.1952 4.52519 15.7694 4.17922 14.1741C3.8332 12.5786 3.99123 10.9088 4.62716 9.41863C5.26289 7.92897 6.33862 6.706 7.68323 5.92604C9.02689 5.14662 10.5704 4.84887 12.0831 5.0722C13.5963 5.29559 15.0073 6.02998 16.1004 7.17503C16.1073 7.18233 16.1144 7.18952 16.1216 7.1966L18.5615 9.60235H15.5996C15.0473 9.60235 14.5996 10.0501 14.5996 10.6024C14.5996 11.1546 15.0473 11.6024 15.5996 11.6024H21C21.5523 11.6024 22 11.1546 22 10.6024V4.93569C22 4.38341 21.5523 3.93569 21 3.93569C20.4477 3.93569 20 4.38341 20 4.93569V8.212L17.5363 5.78278C16.145 4.33021 14.3352 3.383 12.3752 3.09364Z" fill="#7B828E"/>
+                  </svg>
+                </div>
               </div>
               <div className={styles.buttonCategory}>
-                <div className={styles.toolButton} onClick={onCancel}>Cancel</div>
-                <div className={styles.toolButton} onClick={saveCurrentImage}>Apply</div>
-                <div className={styles.toolButton} onClick={downloadCurrentImage}>Save</div>
+                <div className={styles.secondaryButton} onClick={onCancel}>Cancel</div>
+                <div className={styles.primaryButton} onClick={downloadCurrentImage}>Save</div>
               </div>
             </div>
           </footer>
