@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import styles from "./assets/ImageProcessor.module.css"
+import styles from "./assets/ImageProcessor.module.css";
 
 interface RotateToolProps {
   imageSrc: string;
@@ -27,7 +27,7 @@ const RotateTool: React.FC<RotateToolProps> = ({
     rotateAngle: 0,
     flipHorizontal: false,
     flipVertical: false,
-  })
+  });
 
   useEffect(() => {
     const img = new Image();
@@ -38,51 +38,62 @@ const RotateTool: React.FC<RotateToolProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-    //   const width = width;
-    //   const height = img.height;
+      // Calculate the angle in radians
+      const angleInRadians = (rotateAngle * Math.PI) / 180;
+      const cos = Math.abs(Math.cos(angleInRadians));
+      const sin = Math.abs(Math.sin(angleInRadians));
 
-      canvas.width = width;
-      canvas.height = height;
+      // Calculate the new width and height based on the rotation
+      const newWidth = width * cos + height * sin;
+      const newHeight = width * sin + height * cos;
 
-      ctx.clearRect(0, 0, width, height); // Clear the canvas
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      // Calculate scale factor to fit the rotated image within canvas
+      const scaleX = newWidth / width;
+      const scaleY = newHeight / height;
+      const scale = Math.min(scaleX, scaleY);
+
+      ctx.clearRect(0, 0, newWidth, newHeight); // Clear the canvas
       ctx.save();
 
       // Translate to the center of the canvas
-      ctx.translate(width / 2, height / 2);
+      ctx.translate(newWidth / 2, newHeight / 2);
       // Apply rotation and flip transformations
-      ctx.rotate((rotateAngle * Math.PI) / 180);
+      ctx.rotate(angleInRadians);
       ctx.scale(flipVertical ? -1 : 1, flipHorizontal ? -1 : 1);
 
-      // Draw the rotated image
-      ctx.drawImage(img, -width / 2, -height / 2, width, height);
+      // Draw the rotated and scaled image
+      ctx.drawImage(img, -width / 2 * scale, -height / 2 * scale, width * scale, height * scale);
       ctx.restore();
 
       // Convert canvas to image source
       const newImageSrc = canvas.toDataURL('image/jpeg');
       setRotatedImageSrc(newImageSrc); // Update state to show the rotated image
 
-      const isModified = 
-      rotateAngle !== initialRotation.rotateAngle || 
-      flipHorizontal !== initialRotation.flipHorizontal || 
-      flipVertical !== initialRotation.flipVertical;
+      const isModified =
+        rotateAngle !== initialRotation.rotateAngle ||
+        flipHorizontal !== initialRotation.flipHorizontal ||
+        flipVertical !== initialRotation.flipVertical;
 
-    // Если изменения были, создаем новое изображение и вызываем onImageRotated
+      // If modified, create a new image and call onImageRotated
       if (isModified) {
         const newImage = new Image();
         newImage.src = newImageSrc;
 
-        // Callback для обновления изображения в родительском компоненте
+        // Callback to update the image in the parent component
         onImageRotated(newImage);
 
-        // Сохраняем текущие настройки как исходные
+        // Save current settings as initial
         setInitialRotation({
           rotateAngle,
           flipHorizontal,
           flipVertical,
         });
-      };
+      }
     };
-  }, [rotateAngle, flipHorizontal, flipVertical]);
+  }, [rotateAngle, flipHorizontal, flipVertical, imageSrc]);
 
   return (
     <div className={styles.canvasContainer}>
