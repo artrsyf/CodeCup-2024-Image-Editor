@@ -1,7 +1,7 @@
 import React, { FC, useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Line, Circle, Rect, Transformer, Image as KonvaImage } from 'react-konva';
 import Konva from 'konva';
-import { Select, Option } from '@material-tailwind/react';
+import { Select, Option, Input, Checkbox } from '@material-tailwind/react';
 
 import ImageCropper from "./ImageCropper";
 import AdjustTool from "./AdjustTool"
@@ -22,6 +22,7 @@ interface ImageProcessorProps {
 }
 
 const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | undefined>(undefined);
   const [currentImage, setCurrentImage] = useState<HTMLImageElement | undefined>(undefined);
   const [tempImage, setTempImage] = useState<HTMLImageElement | undefined>(undefined);
 
@@ -51,6 +52,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const [showElementsModal, setShowElementsModal] = useState<boolean>(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
   const [elements, setElements] = useState<any[]>([]);
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -61,14 +64,31 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const canvasContainerRef = useRef<HTMLDivElement>(null); // Ref для контейнера канваса
 
   const [canvasHeight, setCanvasHeight] = useState<number>(0);
+  const [canvasWidth, setCanvasWidth] = useState<number>(0);
 
   const [activeChanges, setActiveChanges] = useState<boolean>(false)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if ((modalRef.current && !modalRef.current.contains(event.target as Node)) && 
+      (true)) {
+        setShowElementsModal(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasContainerRef.current) {
         const { offsetWidth, offsetHeight } = canvasContainerRef.current;
         setCanvasHeight(offsetHeight);
+        setCanvasWidth(offsetWidth);
       }
     };
 
@@ -87,8 +107,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     const img = new window.Image();
     img.src = imageSrc;
     img.onload = () => {
+      setOriginalImage(img)
       setCurrentImage(img);
-      
       setTempImage(img);
 
       setResizeHeight(img.height);
@@ -168,6 +188,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   // Обработчик клика на элемент для выделения
   const handleSelectElement = (element: any) => {
+    setActiveChanges(true)
     setSelectedElement(element);
   };
 
@@ -196,6 +217,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     node.scaleY(1);
 
     saveToTempImage();
+    setActiveChanges(true)
   };
 
   const saveToTempImage = () => {
@@ -214,7 +236,28 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const handleDragEnd = () => {
     saveToTempImage();
+    setActiveChanges(true)
   };
+
+  const fitDimensions = (width: number, height: number, canvasWidth: number, canvasHeight: number) => {
+    // Вычисляем соотношение сторон изображения и канваса
+    const imageRatio = width / height;
+    const canvasRatio = canvasWidth / canvasHeight;
+  
+    let newWidth, newHeight;
+  
+    // Если соотношение изображения шире, чем канвас, ограничиваем по ширине
+    if (imageRatio > canvasRatio) {
+      newWidth = canvasWidth;
+      newHeight = canvasWidth / imageRatio;
+    } else {
+      // Если соотношение изображения уже, чем канвас, ограничиваем по высоте
+      newHeight = canvasHeight;
+      newWidth = canvasHeight * imageRatio;
+    }
+  
+    return { width: newWidth, height: newHeight };
+  }
 
   useEffect(() => {
     if (editingText) {
@@ -229,12 +272,11 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           <>
             {/* @ts-ignore */}
             <Select
-              className="min-w-full !min-w-full"
               label="Crop ratio"
               onChange={(value: string | undefined) => setCropScale(parseFloat(value ?? "1"))}
               color="blue"
               containerProps={{
-                className: "min-w-0",
+                className: "!min-w-0",
               }}
             >
               <Option value="1">1:1</Option>
@@ -246,55 +288,94 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       case 'resize':
         return (
           <div className={styles.resizeRightPanel}>
-            <input
+            {/* @ts-ignore */}
+            <Input
               type="number"
+              label="Width (px)"
+              color="blue"
               value={resizeWidth}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => 
                 setResizeWidth(Number(event.target.value))}
               placeholder="Width"
               className={styles.inputField}
+              containerProps={{
+                className: "!min-w-0",
+              }}
             />
-            <input
+            {/* @ts-ignore */}
+            <Input
               type="number"
               value={resizeHeight}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setResizeHeight(Number(event.target.value))}
+              label="Height (px)"
+              color="blue"
               placeholder="Height"
               className={styles.inputField}
+              containerProps={{
+                className: "!min-w-0",
+              }}
             />
-            <label>
-              <input
-                type="checkbox"
+              {/* @ts-ignore */}
+              <Checkbox
+                color="blue"
                 checked={preserveAspectRatio}
+                label="Constrain proportions"
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                   setPreserveAspectRatio(event.target.checked)}
-              />
-              Constrain proportions
-            </label>
+                containerProps={{
+                  className: "!min-w-0",
+                }}
+              >
+              </Checkbox>
           </div>
         );
       case 'rotate':
         return (
           <div className={styles.rotateFlipControls}>
-            <div>Rotate</div>
-            <div className={styles.rotateControls}>
-              <button className={styles.toolButton} onClick={() =>
-                setRotateAngle((prevAngle) => (prevAngle - 90 + 360) % 360)
-              }>Rotate Left</button>
-              <button className={styles.toolButton} onClick={() => 
-                setRotateAngle((prevAngle) => (prevAngle + 90) % 360)
-              }>Rotate Right</button>
+            <div className={styles.rotateControlsContainer}>
+              <div className={styles.rotateControlsNaming}>Rotate</div>
+              <div className={styles.rotateControls}>
+                <button className={styles.flipRotateButton} onClick={() =>
+                  setRotateAngle((prevAngle) => (prevAngle - 90 + 360) % 360)
+                }>
+                  <svg width="30" height="32" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M-2.89051e-06 16L-3.68267e-06 29.7143C-3.71769e-06 30.3205 0.24313 30.9019 0.675905 31.3305C1.10868 31.7592 1.69565 32 2.30769 32L16.1538 32C16.7659 32 17.3529 31.7592 17.7856 31.3305C18.2184 30.9019 18.4615 30.3205 18.4615 29.7143L18.4615 16C18.4615 15.3938 18.2184 14.8124 17.7856 14.3838C17.3529 13.9551 16.7659 13.7143 16.1538 13.7143L2.30769 13.7143C1.69565 13.7143 1.10868 13.9551 0.675906 14.3838C0.243131 14.8124 -2.8555e-06 15.3938 -2.89051e-06 16ZM16.1538 29.7143L2.30769 29.7143L2.30769 15.9989L16.1538 16L16.1538 29.7143ZM17.3077 1.4875e-06L18.9346 1.61143L15.9577 4.57143L21.9231 4.57143C24.0643 4.57445 26.1169 5.41828 27.631 6.91792C29.145 8.41755 29.9969 10.4506 30 12.5714L30 18.2857L27.6923 18.2857L27.6923 12.5714C27.6905 11.0565 27.0821 9.60407 26.0005 8.53282C24.919 7.46158 23.4526 6.85896 21.9231 6.85714L15.9577 6.85714L18.9346 9.81714L17.3077 11.4286L11.5385 5.71429L17.3077 1.4875e-06Z" fill="#7B828E"/>
+                  </svg>
+                </button>
+                <button className={styles.flipRotateButton} onClick={() => 
+                  setRotateAngle((prevAngle) => (prevAngle + 90) % 360)
+                }>
+                  <svg width="30" height="32" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 16L30 29.7143C30 30.3205 29.7569 30.9019 29.3241 31.3305C28.8913 31.7592 28.3043 32 27.6923 32L13.8462 32C13.2341 32 12.6471 31.7592 12.2144 31.3305C11.7816 30.9019 11.5385 30.3205 11.5385 29.7143L11.5385 16C11.5385 15.3938 11.7816 14.8124 12.2144 14.3838C12.6471 13.9551 13.2341 13.7143 13.8462 13.7143L27.6923 13.7143C28.3043 13.7143 28.8913 13.9551 29.3241 14.3838C29.7569 14.8124 30 15.3938 30 16ZM13.8462 29.7143L27.6923 29.7143L27.6923 15.9989L13.8462 16L13.8462 29.7143ZM12.6923 1.4875e-06L11.0654 1.61143L14.0423 4.57143L8.07692 4.57143C5.93573 4.57445 3.8831 5.41828 2.36905 6.91792C0.854991 8.41755 0.00305107 10.4506 -1.12222e-06 12.5714L-7.92157e-07 18.2857L2.30769 18.2857L2.30769 12.5714C2.30952 11.0565 2.91794 9.60407 3.99948 8.53282C5.08103 7.46158 6.54739 6.85896 8.07692 6.85714L14.0423 6.85714L11.0654 9.81714L12.6923 11.4286L18.4615 5.71429L12.6923 1.4875e-06Z" fill="#7B828E"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div>Flip</div>
-            <div className={styles.flipControls}>
-              <button className={styles.toolButton} onClick={() =>
-                setFlipHorizontal((prev) => !prev)
-              }>Flip Horizontal</button>
-              <button className={styles.toolButton} onClick={() => 
-                setFlipVertical((prev) => !prev)
-              }>Flip Vertical</button>
-            </div> 
+            <div className={styles.flipControlsContainer}>
+              <div className={styles.flipControlsNaming}>Flip</div>
+              <div className={styles.flipControls}>
+                <button className={styles.flipRotateButton} onClick={() => 
+                  setFlipVertical((prev) => !prev)
+                }>
+                  <svg width="36" height="22" viewBox="0 0 36 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="18" y1="4.37114e-08" x2="18" y2="22" stroke="#7B828E" stroke-width="2"/>
+                    <rect width="11" height="22" fill="#7B828E"/>
+                    <rect x="26" y="1" width="9" height="20" stroke="#7B828E" stroke-width="2"/>
+                  </svg>
+                </button>
+                <button className={styles.flipRotateButton} onClick={() =>
+                  setFlipHorizontal((prev) => !prev)
+                }>
+                  <svg width="22" height="36" viewBox="0 0 22 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="22" y1="18" x2="-8.74228e-08" y2="18" stroke="#7B828E" stroke-width="2"/>
+                    <rect x="22" width="11" height="22" transform="rotate(90 22 0)" fill="#7B828E"/>
+                    <rect x="21" y="26" width="9" height="20" transform="rotate(90 21 26)" stroke="#7B828E" stroke-width="2"/>
+                  </svg>
+                </button>
+              </div> 
+            </div>
           </div>
         );
       case 'adjust':
@@ -313,10 +394,80 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
       case 'filters':
         return (
           <div className={styles.filterGrid}>
-          <button className={styles.toolButton} onClick={() => setActiveFilter("none")}>None</button>
-          <button className={styles.toolButton} onClick={() => setActiveFilter("grayscale")}>Black&White</button>
-          <button className={styles.toolButton} onClick={() => setActiveFilter("sepia")}>Sepia</button>
-          <button className={styles.toolButton} onClick={() => setActiveFilter("vintage")}>Vintage</button>
+            <div className={styles.filterWrapper}>
+              <button 
+                className={`${styles.filterButton} ${activeFilter === "none" ? styles.filterButtonActive : ""}`} 
+                onClick={() => setActiveFilter("none")}
+              >
+                <div className='filterPreview'>
+                  <FilterTool 
+                    imageSrc={currentImage?.src || ""}
+                    width={74}
+                    height={74}
+                    selectedFilter="none"
+                    isPreview={true}
+                    onImageFiltered={() => null}
+                  />
+                </div>
+              </button>
+              <div className={styles.filterText}>None</div>
+            </div>
+            <div className={styles.filterWrapper}>
+              <button 
+                className={`${styles.filterButton} ${activeFilter === "grayscale" ? styles.filterButtonActive : ""}`}
+                onClick={() => setActiveFilter("grayscale")}
+              >
+                <div className='filterPreview'>
+                  <FilterTool 
+                    imageSrc={currentImage?.src || ""}
+                    width={74}
+                    height={74} 
+                    selectedFilter="grayscale"
+                    isPreview={true}
+                    onImageFiltered={() => null}
+                  />
+                </div>
+              </button>
+              <div className={styles.filterText}>Black&White</div>
+            </div>
+            
+            <div className={styles.filterWrapper}>
+              <button 
+                className={`${styles.filterButton} ${activeFilter === "sepia" ? styles.filterButtonActive : ""}`}
+                onClick={() => setActiveFilter("sepia")}
+              >
+                <div className='filterPreview'>
+                  <FilterTool 
+                    imageSrc={currentImage?.src || ""}
+                    width={74}
+                    height={74}
+                    selectedFilter="sepia"
+                    isPreview={true}
+                    onImageFiltered={() => null}
+                  />
+                </div>
+              </button>
+              <div className={styles.filterText}>Sepia</div>
+            </div>
+          
+            <div className={styles.filterWrapper}>
+              <button 
+                className={`${styles.filterButton} ${activeFilter === "vintage" ? styles.filterButtonActive : ""}`}
+                onClick={() => setActiveFilter("vintage")}
+              >
+                <div className='filterPreview'>
+                  <FilterTool 
+                    imageSrc={currentImage?.src || ""} 
+                    width={74}
+                    height={74}
+                    selectedFilter="vintage"
+                    isPreview={true}
+                    onImageFiltered={() => null}
+                  />
+                </div>
+              </button>
+              <div className={styles.filterText}>Vintage</div>
+            </div>
         </div>
         );
       case 'elements':
@@ -325,26 +476,23 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             return (
               <TextSettingsMenu
                 textNode={stageRef.current?.findOne(`#${selectedElement.id}`)}
-                onClose={() => setSelectedElement(null)}
               />
             );
           } else {
               return (
                 <ShapeSettingsMenu
                     shapeNode={stageRef.current?.findOne(`#${selectedElement.id}`)}
-                    onClose={() => setSelectedElement(null)}
                 />
               );
           }
         }
-        return <div>Select an element to edit.</div>;
+        return <div></div>;
       default:
         return null;
     }
   };
 
   const clearChanges = () => {
-    setElements([])
     if (cropScale != -1) setCropScale(-1);
 
     if (flipHorizontal) setFlipHorizontal(false);
@@ -359,6 +507,11 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     if (contrast != 0) setContrast(0);
     if (saturation != 0) setSaturation(0);
     if (exposure != 0) setExposure(1);
+
+    if (activeFilter) setActiveFilter(null);
+
+    setElements([]);
+    if (selectedElement) setSelectedElement(null);
 
     setActiveTool(null);
     setShowElementsModal(false);
@@ -485,8 +638,10 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             <div className={activeTool && activeTool == 'filters' ? styles.activeLeftMenuToolText : styles.leftMenuToolText}>Filters</div>
           </div>
           <div className={styles.toolButton} onClick={() => {
-            confirmExit();
-            setActiveTool("elements")
+            if (activeTool != "elements") {
+              confirmExit();
+              setActiveTool("elements")
+            }
             setShowElementsModal((prev) => !prev);
           }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -498,7 +653,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             </svg>
           </div>
           {showElementsModal && (
-            <div className={styles.elementsModal} style={{ position: 'absolute', left: '240px', top: '210px' }}>
+            <div ref={modalRef} className={styles.elementsModal} style={{ position: 'absolute', left: '240px', top: '210px' }}>
               <div className={styles.figureButton} onClick={() => addElement('text')}>
                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1C0 0.447715 0.447715 0 1 0H39C39.5523 0 40 0.447715 40 1V8C40 8.55228 39.5523 9 39 9C38.4477 9 38 8.55228 38 8V2H2V8C2 8.55228 1.55228 9 1 9C0.447715 9 0 8.55228 0 8V1Z" fill="#12A3F8"/>
@@ -509,29 +664,19 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               </div>
               <div className={styles.figureButton} onClick={() => addElement('line')}>
                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="40" height="40" fill="white"/>
                   <line y1="19" x2="40" y2="19" stroke="#12A3F8" stroke-width="2"/>
                 </svg>
                 <div className={styles.figureButtonText}>Line</div>
               </div>
               <div className={styles.figureButton} onClick={() => addElement('circle')}>
                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g clip-path="url(#clip0_137_14805)">
-                  <rect width="40" height="40" fill="white"/>
                   <circle cx="20" cy="20" r="20" fill="#12A3F8"/>
-                  </g>
-                  <defs>
-                  <clipPath id="clip0_137_14805">
-                  <rect width="40" height="40" fill="white"/>
-                  </clipPath>
-                  </defs>
                 </svg>
                 <div className={styles.figureButtonText}>Circle</div>
               </div>
               <div className={styles.figureButton} onClick={() => addElement('rect')}>
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="40" height="40" fill="white"/>
-                  <rect y="7" width="40" height="25" fill="#12A3F8"/>
+                <svg width="40" height="40" viewBox="0 0 40 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" fill="#12A3F8"/>
                 </svg>
                 <div className={styles.figureButtonText}>Square</div>
               </div>
@@ -613,6 +758,8 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           {activeTool === 'adjust'&& (
             <AdjustTool
               imageSrc={currentImage?.src || ""}
+              width={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).width}
+              height={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).height}
               brightness={brightness}
               contrast={contrast}
               saturation={saturation}
@@ -623,22 +770,31 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           {activeTool === 'filters' && (
             <FilterTool 
               imageSrc={currentImage?.src || ""} 
+              width={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).width}
+              height={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).height}
               selectedFilter={activeFilter}
+              isPreview={false}
               onImageFiltered={(tempImage) => {setTempImage(tempImage); setActiveChanges(true)}}
             />
           )}
           {activeTool === 'elements' && (
             <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
-            <Stage width={currentImage && currentImage.width * canvasHeight / currentImage.height} height={canvasHeight} ref={stageRef} onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}>
+            <Stage 
+              width={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).width}
+              height={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).height}
+              ref={stageRef} 
+              onMouseDown={(e) => e.target === e.target.getStage() && setSelectedElement(null)} 
+              perfectDrawEnabled={true} pixelRatio={window.devicePixelRatio}
+            >
               <Layer>
                 {imageSrc && (
                   <KonvaImage
                     image={currentImage}
                     x={0}
                     y={0}
-                    width={currentImage && currentImage.width * canvasHeight / currentImage.height}
-                    height={canvasHeight}
-                    listening={false} // Disable interactions with the image
+                    width={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).width}
+                    height={fitDimensions(resizeWidth, resizeHeight, canvasWidth, canvasHeight).height}
+                    listening={false}
                   />
                 )}
               </Layer>
@@ -671,6 +827,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                           onTransformEnd={handleTransform}
                           onDragEnd={handleDragEnd}
                           id={element.id}
+                          strokeWidth={5}
                         />
                       );
                     case 'circle':
@@ -724,7 +881,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           <footer className={styles.footer}>
             <div className={styles.editTools}>
               <div className={styles.buttonCategory}>
-                <div className={styles.revertButton}>Revert original</div>
+                <div onClick={() => setCurrentImage(originalImage)} className={styles.revertButton}>Revert original</div>
               </div>
               <div className={styles.buttonCategory}>
                 <div className={styles.redoUndoButton}>
