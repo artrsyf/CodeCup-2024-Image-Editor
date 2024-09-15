@@ -7,10 +7,11 @@ import styles from './assets/ImageProcessor.module.css';
 interface FilterToolProps {
     imageSrc: string;
     selectedFilter: string | null;
+    isPreview: boolean;
     onImageFiltered: (newImage: HTMLImageElement) => void;
 }
 
-const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onImageFiltered }) => {
+const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, isPreview, onImageFiltered }) => {
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const imageRef = useRef<Konva.Image>(null);
     const stageRef = useRef<Konva.Stage>(null);
@@ -20,6 +21,16 @@ const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onIma
     const updateSize = () => {
         const container = document.querySelector(`.${styles.canvasContainer}`) as HTMLElement;
         if (container && image) {
+          if (isPreview) {
+            console.log(1);
+            setStageSize({
+              width: 74,
+              height: 74,
+            });
+
+            return;
+          }
+
           const containerHeight = container.clientHeight;
           const imgAspectRatio = image.width / image.height;
           const newWidth = containerHeight * imgAspectRatio;
@@ -87,7 +98,7 @@ const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onIma
     }, [image, selectedFilter]);
 
     return (
-        <div className={styles.canvasContainer}>
+        <div className={styles.canvasContainer} style={isPreview ? { width: '74px', height: '74px' } : {}}>
           {imageLoaded && stageSize.width > 0 && stageSize.height > 0 ? (
             <Stage width={stageSize.width} height={stageSize.height} ref={stageRef}>
               <Layer>
