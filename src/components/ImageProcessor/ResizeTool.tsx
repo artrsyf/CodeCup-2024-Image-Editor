@@ -35,12 +35,10 @@ const ResizeTool: React.FC<ResizeToolProps> = ({
       canvas.width = width;
       canvas.height = height;
 
-      // Draw the resized image on the canvas
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert canvas to image source
       const newImageSrc = canvas.toDataURL('image/jpeg');
-      setResizedImageSrc(newImageSrc); // Update state to show the resized image
+      setResizedImageSrc(newImageSrc); 
 
       const isModified = 
         width !== initialSize.width || 
@@ -51,10 +49,8 @@ const ResizeTool: React.FC<ResizeToolProps> = ({
         const newImage = new Image();
         newImage.src = newImageSrc;
 
-        // Callback для обновления изображения в родительском компоненте
         onImageResized(newImage);
 
-        // Сохраняем текущие настройки как исходные
         setInitialSize({
           width,
           height,
@@ -66,7 +62,6 @@ const ResizeTool: React.FC<ResizeToolProps> = ({
 
   return (
     <div className={styles.canvasContainer}>
-      {/* Visible image showing the resized result */}
       <img 
         src={resizedImageSrc} 
         alt="Resized"
@@ -75,7 +70,6 @@ const ResizeTool: React.FC<ResizeToolProps> = ({
         width={width}
       />  
 
-      {/* Hidden canvas for resizing processing */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
     </div>
   );

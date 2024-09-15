@@ -1,5 +1,6 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 import styles from './assets/ImageProcessor.module.css';
+import { Slider } from "@material-tailwind/react";
 
 interface AdjustSlidersProps {
   brightness: number;
@@ -22,53 +23,57 @@ const AdjustSliders: FC<AdjustSlidersProps> = ({
   setSaturation,
   setExposure,
 }) => {
+  const scaleValue = (value: number, inMin: number, inMax: number, outMin: number, outMax: number) => {
+    return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+  };
+
   return (
     <div className={styles.sliderContainer}>
       <label>
         Brightness:
-        <input
-          type="range"
-          min={-1}
-          max={1}
-          step={0.1}
-          value={brightness}
-          onChange={(e) => setBrightness(parseFloat(e.target.value))}
+        {/* @ts-ignore */}
+        <Slider
+          value={scaleValue(brightness, -1, 1, 0, 100)}
+          color='blue'
+          onChange={(event) =>
+            setBrightness(scaleValue(parseFloat(event.target.value), 0, 100, -1, 1))
+          }
         />
       </label>
 
       <label>
         Contrast:
-        <input
-          type="range"
-          min={-100}
-          max={100}
-          step={1}
-          value={contrast}
-          onChange={(e) => setContrast(parseFloat(e.target.value))}
+        {/* @ts-ignore */}
+        <Slider
+          value={scaleValue(contrast, -100, 100, 0, 100)}
+          color='blue'
+          onChange={(event) =>
+            setContrast(scaleValue(parseFloat(event.target.value), 0, 100, -100, 100))
+          }
         />
       </label>
 
       <label>
         Saturation:
-        <input
-          type="range"
-          min={-1}
-          max={1}
-          step={0.1}
-          value={saturation}
-          onChange={(e) => setSaturation(parseFloat(e.target.value))}
+        {/* @ts-ignore */}
+        <Slider
+          value={scaleValue(saturation, -1, 1, 0, 100)}
+          color='blue'
+          onChange={(event) =>
+            setSaturation(scaleValue(parseFloat(event.target.value), 0, 100, -1, 1))
+          }
         />
       </label>
 
       <label>
         Exposure:
-        <input
-          type="range"
-          min={0}
-          max={2}
-          step={0.1}
-          value={exposure}
-          onChange={(e) => setExposure(parseFloat(e.target.value))}
+        {/* @ts-ignore */}
+        <Slider
+          value={scaleValue(exposure, 0, 2, 0, 100)}
+          color='blue'
+          onChange={(event) =>
+            setExposure(scaleValue(parseFloat(event.target.value), 0, 100, 0, 2))
+          }
         />
       </label>
     </div>

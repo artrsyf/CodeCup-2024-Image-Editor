@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import Konva from 'konva';
 
@@ -6,50 +6,37 @@ import styles from './assets/ImageProcessor.module.css';
 
 interface FilterToolProps {
     imageSrc: string;
+    width: number;
+    height: number;
     selectedFilter: string | null;
+    isPreview: boolean;
     onImageFiltered: (newImage: HTMLImageElement) => void;
 }
 
-const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onImageFiltered }) => {
+const FilterTool: React.FC<FilterToolProps> = ({
+    imageSrc,
+    width,
+    height,
+    selectedFilter,
+    isPreview,
+    onImageFiltered
+}) => {
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const imageRef = useRef<Konva.Image>(null);
     const stageRef = useRef<Konva.Stage>(null);
-    const [stageSize, setStageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
     const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-
-    const updateSize = () => {
-        const container = document.querySelector(`.${styles.canvasContainer}`) as HTMLElement;
-        if (container && image) {
-          const containerHeight = container.clientHeight;
-          const imgAspectRatio = image.width / image.height;
-          const newWidth = containerHeight * imgAspectRatio;
-          setStageSize({
-            width: newWidth, // Убедитесь, что ширина не меньше ширины контейнера
-            height: containerHeight,
-          });
-        }
-      };
-
-      // Обновляем размер при изменении окна
-  useLayoutEffect(() => {
-    window.addEventListener('resize', updateSize);
-    updateSize(); // Инициальное обновление размера
-
-    return () => {
-      window.removeEventListener('resize', updateSize);
-    };
-  }, [image]);
-
-  // Загружаем изображение
-  useEffect(() => {
-    const img = new window.Image();
-    img.src = imageSrc;
-    setImage(img);
-    setImageLoaded(true); // Устанавливаем флаг загрузки в true
-    updateSize(); // Обновляем размер после загрузки изображения
-  }, [imageSrc]);
+    const [filterApplied, setFilterApplied] = useState<boolean>(false); // Новое состояние
 
     useEffect(() => {
+        const img = new window.Image();
+        img.src = imageSrc;
+        img.onload = () => {
+            setImage(img);
+            setImageLoaded(true);
+        };
+    }, [imageSrc]);
+
+    const applyFilter = () => {
         if (imageRef.current) {
             const filters = [];
             const imageNode = imageRef.current;
@@ -69,41 +56,49 @@ const FilterTool: React.FC<FilterToolProps> = ({ imageSrc, selectedFilter, onIma
 
             imageNode.filters(filters);
             imageNode.cache();
-            imageNode.getLayer()?.batchDraw(); // Ensure the image is redrawn
+            imageNode.getLayer()?.batchDraw();
+
+            setFilterApplied(true);
         }
+    };
+
+    useEffect(() => {
+      applyFilter();
     }, [selectedFilter]);
 
     useEffect(() => {
-        if (image && stageRef.current) {
+        if (image && stageRef.current && filterApplied && !isPreview) {
             const stage = stageRef.current;
-            const dataURL = stage.toDataURL({ pixelRatio: 3 }); // Increase image quality
+            const dataURL = stage.toDataURL({ pixelRatio: 3 });
             const newImage = new Image();
             newImage.src = dataURL;
 
             newImage.onload = () => {
                 onImageFiltered(newImage);
             };
+
+            setFilterApplied(false);
         }
-    }, [image, selectedFilter]);
+    }, [filterApplied, image, selectedFilter, isPreview]);
 
     return (
-        <div className={styles.canvasContainer}>
-          {imageLoaded && stageSize.width > 0 && stageSize.height > 0 ? (
-            <Stage width={stageSize.width} height={stageSize.height} ref={stageRef}>
-              <Layer>
-                {image && (
-                  <KonvaImage
-                    image={image}
-                    ref={imageRef}
-                    width={stageSize.width}
-                    height={stageSize.height}
-                  />
-                )}
-              </Layer>
-            </Stage>
-          ) : (
-            <div className={styles.loader}>Загрузка...</div> // Загрузка или спиннер
-          )}
+        <div className={styles.canvasContainer} style={isPreview ? { width: '74px', height: '74px' } : {}}>
+            {imageLoaded ? (
+                <Stage width={width} height={height} ref={stageRef}>
+                    <Layer>
+                        {image && (
+                            <KonvaImage
+                                image={image}
+                                ref={imageRef}
+                                width={width}
+                                height={height}
+                            />
+                        )}
+                    </Layer>
+                </Stage>
+            ) : (
+                <div className={styles.loader}>Загрузка...</div>
+            )}
         </div>
     );
 };
