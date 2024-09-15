@@ -275,6 +275,7 @@
     justify-content: center;
     align-items: center;
     border-radius: 8px;
+    cursor: pointer;
 }
 
 .figureButton:hover {
@@ -286,7 +287,7 @@
     font-weight: 500;
 }
 
-.textEditWrapper {
+.figureEditWrapper {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -299,7 +300,7 @@
 }
 
 .filterButton {
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     border-radius: 8px;
 }
 
