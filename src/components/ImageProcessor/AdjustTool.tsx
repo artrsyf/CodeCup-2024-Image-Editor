@@ -5,6 +5,8 @@ import styles from './assets/ImageProcessor.module.css';
 
 interface AdjustToolProps {
   imageSrc: string;
+  width: number;
+  height: number;
   brightness: number;
   contrast: number;
   saturation: number;
@@ -12,7 +14,7 @@ interface AdjustToolProps {
   onImageAdjusted: (newImage: HTMLImageElement) => void;
 }
 
-const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, brightness, contrast, saturation, exposure, onImageAdjusted }) => {
+const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, brightness, contrast, saturation, exposure, onImageAdjusted }) => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const imageRef = useRef<Konva.Image>(null);
@@ -82,14 +84,14 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, brightness, contrast,
   return (
     <div className={styles.canvasContainer}>
       {imageLoaded && stageSize.width > 0 && stageSize.height > 0 ? (
-        <Stage width={stageSize.width} height={stageSize.height} ref={stageRef}>
+        <Stage width={width} height={height} ref={stageRef}>
           <Layer>
             {image && (
               <KonvaImage
                 image={image}
                 ref={imageRef}
-                width={stageSize.width}
-                height={stageSize.height}
+                width={width}
+                height={height}
               />
             )}
           </Layer>
