@@ -16,6 +16,8 @@ import RotateTool from "./RotateTool"
 
 import {renderTextEditArea, produceResizedTempImage, produceRotatedTempImage} from "./utils/utils"
 
+const MAX_HISTORY = 20;
+
 interface ImageProcessorProps {
   imageSrc: string;
   onCancel: () => void;
@@ -25,6 +27,9 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | undefined>(undefined);
   const [currentImage, setCurrentImage] = useState<HTMLImageElement | undefined>(undefined);
   const [tempImage, setTempImage] = useState<HTMLImageElement | undefined>(undefined);
+
+  const [undoStack, setUndoStack] = useState<HTMLImageElement[]>([]);
+  const [redoStack, setRedoStack] = useState<HTMLImageElement[]>([]);
 
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
@@ -533,9 +538,74 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const saveCurrentImage = () => {
     if (tempImage) {
+      // Добавляем текущее изображение в undoStack, только если оно существует
+      setUndoStack(prevStack => {
+        if (currentImage) {
+          const newStack = [...prevStack, currentImage]; // Добавляем только если currentImage не undefined
+          // Ограничиваем стек до 20 шагов
+          if (newStack.length > MAX_HISTORY) {
+            newStack.shift(); // Удаляем самое старое состояние, если больше 20
+          }
+          return newStack;
+        }
+        return prevStack; // Если currentImage отсутствует, возвращаем стек как есть
+      });
+  
+      // Обновляем текущее изображение и очищаем временные изменения
       setCurrentImage(tempImage);
+      setRedoStack([]); // Очистка redoStack при сохранении нового изображения
       clearChanges();
     }
+  };
+
+  const undo = () => {
+    setUndoStack(prevUndoStack => {
+      if (prevUndoStack.length === 0) return prevUndoStack; // Нельзя сделать undo, если стека нет
+  
+      // Берем последнее состояние из undoStack
+      const lastImage = prevUndoStack[prevUndoStack.length - 1];
+  
+      // Убираем последнее состояние из undoStack
+      const newUndoStack = prevUndoStack.slice(0, -1);
+  
+      // Сохраняем текущее изображение в redoStack, только если оно существует
+      setRedoStack(prevRedoStack => {
+        if (currentImage) {
+          return [...prevRedoStack, currentImage];
+        }
+        return prevRedoStack;
+      });
+  
+      // Устанавливаем последнее изображение как текущее
+      setCurrentImage(lastImage);
+      
+      return newUndoStack;
+    });
+  };
+
+  const redo = () => {
+    setRedoStack(prevRedoStack => {
+      if (prevRedoStack.length === 0) return prevRedoStack; // Нельзя сделать redo, если стека нет
+  
+      // Берем последнее состояние из redoStack
+      const lastImage = prevRedoStack[prevRedoStack.length - 1];
+  
+      // Убираем последнее состояние из redoStack
+      const newRedoStack = prevRedoStack.slice(0, -1);
+  
+      // Сохраняем текущее изображение в undoStack, только если оно существует
+      setUndoStack(prevUndoStack => {
+        if (currentImage) {
+          return [...prevUndoStack, currentImage];
+        }
+        return prevUndoStack;
+      });
+  
+      // Устанавливаем последнее изображение как текущее
+      setCurrentImage(lastImage);
+  
+      return newRedoStack;
+    });
   };
 
   const downloadCurrentImage = () => {
@@ -884,17 +954,17 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
                 <div onClick={() => setCurrentImage(originalImage)} className={styles.revertButton}>Revert original</div>
               </div>
               <div className={styles.buttonCategory}>
-                <div className={styles.redoUndoButton}>
+                <button className={styles.redoUndoButton} onClick={undo} disabled={undoStack.length === 0}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.6248 3.09364C13.5903 2.80347 15.5899 3.19227 17.3203 4.19602C19.0497 5.19922 20.4125 6.75943 21.2123 8.63361C22.0119 10.5073 22.2087 12.5997 21.7753 14.598C21.3419 16.5966 20.2995 18.4015 18.7959 19.7365C17.2915 21.0723 15.4071 21.8644 13.4252 21.9841C11.4431 22.1038 9.48203 21.5437 7.83826 20.3956C6.19543 19.2482 4.96089 17.5779 4.31117 15.6428C4.13538 15.1193 4.4173 14.5523 4.94086 14.3765C5.46442 14.2007 6.03136 14.4827 6.20715 15.0062C6.72462 16.5474 7.70234 17.8612 8.98348 18.756C10.2637 19.6502 11.78 20.0799 13.3046 19.9878C14.8294 19.8957 16.2911 19.286 17.468 18.241C18.6458 17.1952 19.4748 15.7694 19.8208 14.1741C20.1668 12.5786 20.0088 10.9088 19.3728 9.41863C18.7371 7.92897 17.6614 6.706 16.3168 5.92604C14.9731 5.14662 13.4296 4.84887 11.9169 5.0722C10.4037 5.29559 8.99272 6.02998 7.89962 7.17503C7.89266 7.18233 7.88558 7.18952 7.8784 7.1966L5.43849 9.60235H8.40038C8.95267 9.60235 9.40038 10.0501 9.40038 10.6024C9.40038 11.1546 8.95267 11.6024 8.40038 11.6024H3C2.44772 11.6024 2 11.1546 2 10.6024V4.93569C2 4.38341 2.44772 3.93569 3 3.93569C3.55228 3.93569 4 4.38341 4 4.93569V8.212L6.46372 5.78278C7.85502 4.33021 9.66475 3.383 11.6248 3.09364Z" fill="#7B828E"/>
                   </svg>
-                </div>
+                </button>
                 <div className={styles.applyButton} onClick={saveCurrentImage}>Apply</div>
-                <div className={styles.redoUndoButton}>
+                <button className={styles.redoUndoButton} onClick={redo} disabled={redoStack.length === 0}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3752 3.09364C10.4097 2.80347 8.41011 3.19227 6.67971 4.19602C4.95026 5.19922 3.58748 6.75943 2.78767 8.63361C1.98806 10.5073 1.79129 12.5997 2.22466 14.598C2.65809 16.5966 3.70045 18.4015 5.20407 19.7365C6.7085 21.0723 8.59294 21.8644 10.5748 21.9841C12.5569 22.1038 14.518 21.5437 16.1617 20.3956C17.8046 19.2482 19.0391 17.5779 19.6888 15.6428C19.8646 15.1193 19.5827 14.5523 19.0591 14.3765C18.5356 14.2007 17.9686 14.4827 17.7928 15.0062C17.2754 16.5474 16.2977 17.8612 15.0165 18.756C13.7363 19.6502 12.22 20.0799 10.6954 19.9878C9.1706 19.8957 7.70891 19.286 6.53196 18.241C5.3542 17.1952 4.52519 15.7694 4.17922 14.1741C3.8332 12.5786 3.99123 10.9088 4.62716 9.41863C5.26289 7.92897 6.33862 6.706 7.68323 5.92604C9.02689 5.14662 10.5704 4.84887 12.0831 5.0722C13.5963 5.29559 15.0073 6.02998 16.1004 7.17503C16.1073 7.18233 16.1144 7.18952 16.1216 7.1966L18.5615 9.60235H15.5996C15.0473 9.60235 14.5996 10.0501 14.5996 10.6024C14.5996 11.1546 15.0473 11.6024 15.5996 11.6024H21C21.5523 11.6024 22 11.1546 22 10.6024V4.93569C22 4.38341 21.5523 3.93569 21 3.93569C20.4477 3.93569 20 4.38341 20 4.93569V8.212L17.5363 5.78278C16.145 4.33021 14.3352 3.383 12.3752 3.09364Z" fill="#7B828E"/>
                   </svg>
-                </div>
+                </button>
               </div>
               <div className={styles.buttonCategory}>
                 <div className={styles.secondaryButton} onClick={onCancel}>Cancel</div>
