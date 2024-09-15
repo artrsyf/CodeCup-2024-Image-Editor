@@ -5,17 +5,10 @@ import styles from './assets/ImageProcessor.module.css';
 
 interface TextSettingsMenuProps {
     textNode: Konva.Text;
+    applyChanges: () => void;
 }
 
-interface TextSettings {
-    fontSize: number;
-    fontFamily: string;
-    fontStyle: string;
-    textAlign: string;
-    color: string;
-}
-
-const TextSettingsMenu: React.FC<TextSettingsMenuProps> = ({ textNode }) => {
+const TextSettingsMenu: React.FC<TextSettingsMenuProps> = ({ textNode, applyChanges }) => {
     const [fontSize, setFontSize] = useState<number>(textNode.fontSize());
     const [fontFamily, setFontFamily] = useState<string>(textNode.fontFamily());
     const [fontStyle, setFontStyle] = useState<string>(textNode.fontStyle());
@@ -31,6 +24,8 @@ const TextSettingsMenu: React.FC<TextSettingsMenuProps> = ({ textNode }) => {
         textNode.align(textAlign);
         textNode.fill(color);
         textNode.getLayer()?.batchDraw();
+
+        applyChanges();
     }, [fontSize, fontFamily, fontStyle, fontDecoration, textAlign, color, textNode]);
 
     return (

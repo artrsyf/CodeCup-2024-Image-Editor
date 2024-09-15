@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import styles from './assets/ImageProcessor.module.css';
@@ -22,9 +22,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, width, height,
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Загружаем изображение и устанавливаем размеры
   useEffect(() => {
     const img = new window.Image();
     img.src = imageToCrop;
@@ -36,7 +34,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, width, height,
     };
   }, [imageToCrop]);
 
-  // Функция для обрезки изображения
   const cropImage = useCallback(
     async (crop: PixelCrop) => {
       if (imageRef.current && crop.width && crop.height) {
@@ -75,7 +72,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageToCrop, width, height,
     }
   }, [imageDimensions]);
 
-  // Функция для получения обрезанного изображения
   const getCroppedImage = (
     sourceImage: HTMLImageElement,
     cropConfig: PixelCrop

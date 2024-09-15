@@ -21,7 +21,6 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
   const stageRef = useRef<Konva.Stage>(null);
   const [stageSize, setStageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Получаем размеры контейнера и устанавливаем размер канваса
   const updateSize = () => {
     const container = document.querySelector(`.${styles.canvasContainer}`) as HTMLElement;
     if (container && image) {
@@ -29,49 +28,46 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
       const imgAspectRatio = image.width / image.height;
       const newWidth = containerHeight * imgAspectRatio;
       setStageSize({
-        width: newWidth, // Убедитесь, что ширина не меньше ширины контейнера
+        width: newWidth,
         height: containerHeight,
       });
     }
   };
 
-  // Обновляем размер при изменении окна
   useLayoutEffect(() => {
     window.addEventListener('resize', updateSize);
-    updateSize(); // Инициальное обновление размера
+    updateSize(); 
 
     return () => {
       window.removeEventListener('resize', updateSize);
     };
   }, [image]);
 
-  // Загружаем изображение
+
   useEffect(() => {
     const img = new window.Image();
     img.src = imageSrc;
     setImage(img);
-    setImageLoaded(true); // Устанавливаем флаг загрузки в true
-    updateSize(); // Обновляем размер после загрузки изображения
+    setImageLoaded(true); 
+    updateSize(); 
   }, [imageSrc]);
 
-  // Применяем фильтры и обновляем изображение
   useEffect(() => {
     if (imageRef.current) {
       imageRef.current.cache();
       imageRef.current.filters([Konva.Filters.Brighten, Konva.Filters.Contrast, Konva.Filters.HSL]);
       imageRef.current.brightness(brightness);
       imageRef.current.contrast(contrast);
-      imageRef.current.hue(saturation * 180); // Конвертация насыщенности в диапазон HSL
-      imageRef.current.saturation(exposure - 1); // Коррекция экспозиции
+      imageRef.current.hue(saturation * 180); 
+      imageRef.current.saturation(exposure - 1); 
       imageRef.current.draw();
     }
   }, [brightness, contrast, saturation, exposure]);
 
-  // Генерация скорректированного изображения
   useEffect(() => {
     if (image && stageRef.current) {
       const stage = stageRef.current;
-      const dataURL = stage.toDataURL({ pixelRatio: 3 }); // Картинка высокого качества
+      const dataURL = stage.toDataURL({ pixelRatio: 3 });
       const newImage = new Image();
       newImage.src = dataURL;
 
@@ -97,7 +93,7 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
           </Layer>
         </Stage>
       ) : (
-        <div className={styles.loader}>Загрузка...</div> // Загрузка или спиннер
+        <div className={styles.loader}>Загрузка...</div>
       )}
     </div>
   );

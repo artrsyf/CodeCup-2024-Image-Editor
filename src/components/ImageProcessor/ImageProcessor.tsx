@@ -99,7 +99,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
     updateCanvasSize();
 
-    // Слушаем изменение размеров окна для обновления размеров канваса
     window.addEventListener('resize', updateCanvasSize);
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
@@ -107,7 +106,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   }, [resizeWidth, resizeHeight]);
 
 
-  // Начальная установка текущей пикчи
   useEffect(() => {
     const img = new window.Image();
     img.src = imageSrc;
@@ -191,13 +189,11 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     }
   }, [selectedElement]);
 
-  // Обработчик клика на элемент для выделения
   const handleSelectElement = (element: any) => {
     setActiveChanges(true)
     setSelectedElement(element);
   };
 
-  // Обработчик изменения элемента с помощью трансформера
   const handleTransform = (e: any) => {
     const node = e.target;
     const scaleX = node.scaleX();
@@ -230,7 +226,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
     if (stageRef.current) {
       console.log("saving")
       const stage = stageRef.current;
-      const dataURL = stage.toDataURL({ pixelRatio: 3 }); // Increase quality
+      const dataURL = stage.toDataURL({ pixelRatio: 3 });
 
       const newImage = new Image();
       newImage.src = dataURL;
@@ -245,18 +241,15 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   };
 
   const fitDimensions = (width: number, height: number, canvasWidth: number, canvasHeight: number) => {
-    // Вычисляем соотношение сторон изображения и канваса
     const imageRatio = width / height;
     const canvasRatio = canvasWidth / canvasHeight;
   
     let newWidth, newHeight;
   
-    // Если соотношение изображения шире, чем канвас, ограничиваем по ширине
     if (imageRatio > canvasRatio) {
       newWidth = canvasWidth;
       newHeight = canvasWidth / imageRatio;
     } else {
-      // Если соотношение изображения уже, чем канвас, ограничиваем по высоте
       newHeight = canvasHeight;
       newWidth = canvasHeight * imageRatio;
     }
@@ -481,6 +474,7 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             return (
               <TextSettingsMenu
                 textNode={stageRef.current?.findOne(`#${selectedElement.id}`)}
+                applyChanges={saveToTempImage}
               />
             );
           } else {
@@ -538,37 +532,31 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const saveCurrentImage = () => {
     if (tempImage) {
-      // Добавляем текущее изображение в undoStack, только если оно существует
       setUndoStack(prevStack => {
         if (currentImage) {
-          const newStack = [...prevStack, currentImage]; // Добавляем только если currentImage не undefined
-          // Ограничиваем стек до 20 шагов
+          const newStack = [...prevStack, currentImage]; 
           if (newStack.length > MAX_HISTORY) {
-            newStack.shift(); // Удаляем самое старое состояние, если больше 20
+            newStack.shift(); 
           }
           return newStack;
         }
-        return prevStack; // Если currentImage отсутствует, возвращаем стек как есть
+        return prevStack; 
       });
   
-      // Обновляем текущее изображение и очищаем временные изменения
       setCurrentImage(tempImage);
-      setRedoStack([]); // Очистка redoStack при сохранении нового изображения
+      setRedoStack([]);
       clearChanges();
     }
   };
 
   const undo = () => {
     setUndoStack(prevUndoStack => {
-      if (prevUndoStack.length === 0) return prevUndoStack; // Нельзя сделать undo, если стека нет
+      if (prevUndoStack.length === 0) return prevUndoStack;
   
-      // Берем последнее состояние из undoStack
       const lastImage = prevUndoStack[prevUndoStack.length - 1];
   
-      // Убираем последнее состояние из undoStack
       const newUndoStack = prevUndoStack.slice(0, -1);
   
-      // Сохраняем текущее изображение в redoStack, только если оно существует
       setRedoStack(prevRedoStack => {
         if (currentImage) {
           return [...prevRedoStack, currentImage];
@@ -576,7 +564,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         return prevRedoStack;
       });
   
-      // Устанавливаем последнее изображение как текущее
       setCurrentImage(lastImage);
       
       return newUndoStack;
@@ -585,15 +572,12 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
 
   const redo = () => {
     setRedoStack(prevRedoStack => {
-      if (prevRedoStack.length === 0) return prevRedoStack; // Нельзя сделать redo, если стека нет
+      if (prevRedoStack.length === 0) return prevRedoStack;
   
-      // Берем последнее состояние из redoStack
       const lastImage = prevRedoStack[prevRedoStack.length - 1];
   
-      // Убираем последнее состояние из redoStack
       const newRedoStack = prevRedoStack.slice(0, -1);
   
-      // Сохраняем текущее изображение в undoStack, только если оно существует
       setUndoStack(prevUndoStack => {
         if (currentImage) {
           return [...prevUndoStack, currentImage];
@@ -601,7 +585,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
         return prevUndoStack;
       });
   
-      // Устанавливаем последнее изображение как текущее
       setCurrentImage(lastImage);
   
       return newRedoStack;
@@ -609,31 +592,24 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
   };
 
   const downloadCurrentImage = () => {
-    if (!currentImage) return; // Check if the image exists
+    if (!currentImage) return; 
 
-    // Create a canvas element
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size to match the current image size
     canvas.width = currentImage.width;
     canvas.height = currentImage.height;
 
-    // Draw the image on the canvas
     ctx?.drawImage(currentImage, 0, 0, currentImage.width, currentImage.height);
 
-    // Convert the canvas content to a data URL (base64 format)
-    const dataURL = canvas.toDataURL('image/png'); // You can change the format if needed
+    const dataURL = canvas.toDataURL('image/png'); 
 
-    // Create an anchor element for downloading the image
     const link = document.createElement('a');
     link.href = dataURL;
-    link.download = 'downloaded_image.png'; // Set the filename for the downloaded image
+    link.download = 'downloaded_image.png';
 
-    // Programmatically click the link to trigger the download
     link.click();
 
-    // Clean up by removing the link element
     link.remove();
   };
   useEffect(() => {
@@ -766,18 +742,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
             />
             </>
           )}
-          {/* Resize tool */}
-          {/* {activeTool === 'resize' && (
-            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
-              <img
-                src={currentImage?.src || ""}
-                className={`${preserveAspectRatio ? styles.saveConstrainResizeImage : ""}`}
-                height={canvasHeight}
-                width={resizeWidth * canvasHeight/resizeHeight}
-                alt="Resized"
-              />
-            </div>
-          )} */}
 
           {activeTool === 'resize' && (
             <ResizeTool
@@ -791,24 +755,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
               }}
             />
           )}
-
-          {/* Rotate tool
-          {activeTool === 'rotate' && (
-            <div className={styles.canvasContainer} id='canvasContainer' ref={canvasContainerRef}>
-              <img
-                src={currentImage?.src || ""}
-                className={styles.uploadedImage}
-                alt="Rotated"
-                style={{
-                  transform: `
-                    rotate(${rotateAngle}deg)
-                    scaleY(${flipHorizontal ? -1 : 1})
-                    scaleX(${flipVertical ? -1 : 1})
-                  `,
-                }}
-              />
-            </div>
-          )} */}
 
           {activeTool === 'rotate' && (
             <RotateTool
@@ -974,7 +920,6 @@ const ImageProcessor: FC<ImageProcessorProps> = ({ imageSrc, onCancel }) => {
           </footer>
         </div>
 
-        {/* <img src={imageSrc} alt="Editable" className={styles.editableImage} /> */}
         <div className={styles.rightMenu}>
           {renderRightPanel()}
         </div>

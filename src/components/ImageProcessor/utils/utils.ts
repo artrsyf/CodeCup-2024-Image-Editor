@@ -10,15 +10,15 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     var tr = new Konva.Transformer({
       node: textNode,
       enabledAnchors: ['middle-left', 'middle-right'],
-      // set minimum width of text
-      boundBoxFunc: function (oldBox, newBox) {
+
+      boundBoxFunc: function (newBox) {
         newBox.width = Math.max(30, newBox.width);
         return newBox;
       },
     });
 
     textNode.on('transform', function () {
-      // reset scale, so only with is changing by transformer
+
       textNode.setAttrs({
         width: textNode.width() * textNode.scaleX(),
         scaleX: 1,
@@ -31,7 +31,7 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     var textPosition = textNode.absolutePosition();
     console.log(textPosition)
 
-    // so position of textarea will be the sum of positions above:
+
     var areaPosition = {
       x: stage.container().offsetLeft + textPosition.x,
       y: stage.container().offsetTop + textPosition.y,
@@ -68,8 +68,7 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     }
 
     var px = 0;
-    // also we need to slightly move textarea on firefox
-    // because it jumps a bit
+
     var isFirefox =
       navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     if (isFirefox) {
@@ -90,9 +89,8 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
 
     textarea.addEventListener('input', updateSizes);
 
-    // reset height
     textarea.style.height = 'auto';
-    // after browsers resized it we can set actual value
+
     textarea.style.height = textarea.scrollHeight + 3 + 'px';
 
     textarea.focus();
@@ -107,10 +105,9 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
 
     function setTextareaWidth(newWidth: any) {
       if (!newWidth) {
-        // set width for placeholder
+
         newWidth = textNode.placeholder.length * textNode.fontSize();
       }
-      // some extra fixes on different browsers
       var isSafari = /^((?!chrome|android).)*safari/i.test(
         navigator.userAgent
       );
@@ -129,21 +126,18 @@ export const renderTextEditArea = (editingText: any, stageRef: React.MutableRefO
     }
 
     textarea.addEventListener('keydown', function (e: KeyboardEvent) {
-      // hide on enter
-      // but don't hide on shift + enter
       if (e.keyCode === 13 && !e.shiftKey) {
         textNode.text(textarea.value);
         removeTextarea();
         setEditingText(null);
       }
-      // on esc do not set value back to node
       if (e.keyCode === 27) {
         removeTextarea();
         setEditingText(null);
       }
     });
 
-    textarea.addEventListener('keydown', function (e) {
+    textarea.addEventListener('keydown', function () {
       const scale = textNode.getAbsoluteScale().x;
       setTextareaWidth(textNode.width() * scale);
       textarea.style.height = 'auto';

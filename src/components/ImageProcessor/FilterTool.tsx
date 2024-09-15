@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import Konva from 'konva';
 
@@ -24,39 +24,8 @@ const FilterTool: React.FC<FilterToolProps> = ({
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const imageRef = useRef<Konva.Image>(null);
     const stageRef = useRef<Konva.Stage>(null);
-    const [stageSize, setStageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
     const [imageLoaded, setImageLoaded] = useState<boolean>(false);
     const [filterApplied, setFilterApplied] = useState<boolean>(false); // Новое состояние
-
-    const updateSize = () => {
-        const container = document.querySelector(`.${styles.canvasContainer}`) as HTMLElement;
-        if (container && image) {
-            if (isPreview) {
-                setStageSize({
-                    width: 74,
-                    height: 74,
-                });
-                return;
-            }
-
-            const containerHeight = container.clientHeight;
-            const imgAspectRatio = image.width / image.height;
-            const newWidth = containerHeight * imgAspectRatio;
-            setStageSize({
-                width: newWidth,
-                height: containerHeight,
-            });
-        }
-    };
-
-    useLayoutEffect(() => {
-        window.addEventListener('resize', updateSize);
-        updateSize(); // Инициальное обновление размера
-
-        return () => {
-            window.removeEventListener('resize', updateSize);
-        };
-    }, [image]);
 
     useEffect(() => {
         const img = new window.Image();
@@ -64,7 +33,6 @@ const FilterTool: React.FC<FilterToolProps> = ({
         img.onload = () => {
             setImage(img);
             setImageLoaded(true);
-            updateSize();
         };
     }, [imageSrc]);
 
@@ -90,7 +58,7 @@ const FilterTool: React.FC<FilterToolProps> = ({
             imageNode.cache();
             imageNode.getLayer()?.batchDraw();
 
-            setFilterApplied(true); // Флаг, что фильтр был применён
+            setFilterApplied(true);
         }
     };
 
@@ -99,18 +67,16 @@ const FilterTool: React.FC<FilterToolProps> = ({
     }, [selectedFilter]);
 
     useEffect(() => {
-        // Убедимся, что фильтр был применён
         if (image && stageRef.current && filterApplied && !isPreview) {
             const stage = stageRef.current;
-            const dataURL = stage.toDataURL({ pixelRatio: 3 }); // Повышаем качество изображения
+            const dataURL = stage.toDataURL({ pixelRatio: 3 });
             const newImage = new Image();
             newImage.src = dataURL;
 
             newImage.onload = () => {
-                onImageFiltered(newImage); // Вызываем только после применения фильтра
+                onImageFiltered(newImage);
             };
 
-            // Сбрасываем флаг, чтобы фильтр снова не применялся без изменений
             setFilterApplied(false);
         }
     }, [filterApplied, image, selectedFilter, isPreview]);
