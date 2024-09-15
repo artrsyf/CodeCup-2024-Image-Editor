@@ -34,7 +34,7 @@ const TextSettingsMenu: React.FC<TextSettingsMenuProps> = ({ textNode }) => {
     }, [fontSize, fontFamily, fontStyle, fontDecoration, textAlign, color, textNode]);
 
     return (
-        <div className={styles.textEditWrapper}>
+        <div className={styles.figureEditWrapper}>
             <div>
                 {/* @ts-ignore */}
                 <Select
