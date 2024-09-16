@@ -1,50 +1,70 @@
-# React + TypeScript + Vite
+# Отборочный тур Codemasters Code Cup 2024
+Данное приложение сделано в соответствии с треком “Разработка бизнес-приложений”.
+Приложение написано на TypeScript React.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Запуск приложения
+Для запуска приложения следует использовать Docker:
+```
+    docker build -t <name:tag> .
+    docker run --rm -p 80:80 <name:tag>
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Доступ к приложению
+Приложение доступно по ссылке: https://rfadeyev.codecup.online/
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## Описание функционала
+Редактирование начинается с выбора изображения.
+Выбор нужного инструмента происходит посредством левого меню.
+Настройки текущего инструмента задаются через правое меню.
+Кнопка "Cancel" закрывает редактор, отменяя все примененные изменения.
+Кнопка "Save" сохраняет изображение с текущими изменениями.
+Кнопка "Apply" применяет несохраненные изменения (перед сохранением ее нужно обязательно нажать).
+Кнопки "Redo" "Undo" позволяют отменять или возвращать изменения, примененные кнопкой "Apply".
+Кнопка "Revert original" возвращает изображение к исходному варианту.
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+## Что можно улучшить
+- Иногда при повороте при разном соотношении сторон на изображении появляются черные рамки;
+- Иногда не рендериться стиль для превьюшек при выборе фильтра;
+- При редактировании текст может сохраняться на изображении с рамкой (если перед сохранением его не двигали или не растягивали);
+- Сделать декомпозицию основного компонента приложения, добавить хранилище состояния типа Redux для уменьшения связности кода.
+
+## Результаты
+- Стартовая страница:
+
+![alt text](/result-images/1.png)
+- Страница с выбранной фотографией:
+
+![alt text](/result-images/2.png)
+- Редактор изображения:
+
+![alt text](/result-images/3.png)
+- Инструмент обрезки фотографии:
+
+![alt text](/result-images/4.png)
+- Инструмент редактирования размеров:
+
+![alt text](/result-images/5.png)
+- Поворот и отражение ихображения:
+
+![alt text](/result-images/6.png)
+- Коррекция изображения:
+
+![alt text](/result-images/7.png)
+- Выбор фильтра:
+
+![alt text](/result-images/8.png)
+- Добавление текста на изображение:
+
+![alt text](/result-images/9.png)
+- Добавление фигуры на изображение:
+
+![alt text](/result-images/10.png)
+- Результат после всех внесенных изменений:
+
+![alt text](/result-images/11.png)
+- Предупреждение о несохраненных изменениях:
+
+![alt text](/result-images/12.png)
+- Полученнное изображение:
+
+![alt text](/result-images/13.png)
