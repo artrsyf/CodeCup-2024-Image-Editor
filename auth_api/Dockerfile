@@ -23,9 +23,9 @@ RUN apk update --no-cache
 
 WORKDIR /app/hw6/bin/hw6/
 
-COPY --from=builder /build/static/ /app/hw6/static/
+# COPY --from=builder /build/static/ /app/hw6/static/
 COPY --from=builder /build/cmd/auth_api/.env /app/hw6/bin/hw6/.env
-COPY --from=builder /build/cmd/auth_api/config.yaml /app/hw6/bin/hw6/config.yaml
+# COPY --from=builder /build/cmd/auth_api/config.yaml /app/hw6/bin/hw6/config.yaml
 COPY --from=builder /app/auth_api /app/hw6/bin/hw6/auth_api
 
 EXPOSE 8080

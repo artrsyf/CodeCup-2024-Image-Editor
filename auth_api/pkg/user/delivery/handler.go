@@ -161,7 +161,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	response, err := json.Marshal(map[string]interface{}{
-		"authToken": tokenString,
+		"accessToken": tokenString,
 	})
 	if err != nil {
 		tools.JSONError(w, http.StatusInternalServerError, err.Error(), "UserHandler.Login")
@@ -229,4 +229,8 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(map[string]string{"accessToken": authToken}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func (h *UserHandler) GetAccess(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }

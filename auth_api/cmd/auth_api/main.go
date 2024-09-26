@@ -14,13 +14,17 @@ import (
 	userDelivery "auth_api/pkg/user/delivery"
 
 	"auth_api/pkg/middleware"
+	"auth_api/pkg/tools"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
+	tools.Init()
 	err := godotenv.Load()
 	if err != nil {
 		slog.Error("Cant load .env file")
@@ -29,12 +33,13 @@ func main() {
 	router := mux.NewRouter()
 
 	mysqlDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?",
-		os.Getenv("MYSQL_USER"),
-		os.Getenv("MYSQL_PASSWORD"),
+		"root",
+		os.Getenv("MYSQL_ROOT_PASSWORD"),
 		os.Getenv("MYSQL_HOST"),
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSQL_DATABASE"),
 	)
+	fmt.Println(mysqlDSN)
 	mysqlDSN += "&charset=utf8"
 	mysqlDSN += "&interpolateParams=true"
 
@@ -73,4 +78,22 @@ func main() {
 
 	router.Handle("/api/refresh", middleware.ValidateContentType(
 		http.HandlerFunc(authHandler.RefreshToken))).Methods("GET")
+
+	router.Handle("/api/check_access",
+		middleware.ValidateJWTToken(
+			sessionRepo,
+			http.HandlerFunc(authHandler.GetAccess))).Methods("GET")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Указываем фронтенд адрес
+		AllowCredentials: true,                              // Разрешаем отправку куков
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+	})
+
+	// Оборачиваем маршрутизатор в обработчик CORS
+	corsRouter := c.Handler(router)
+
+	tools.Logger.Printf("starting server at http://127.0.0.1:8080")
+	tools.Logger.Fatal(http.ListenAndServe(fmt.Sprintf(":8080"), corsRouter))
 }
