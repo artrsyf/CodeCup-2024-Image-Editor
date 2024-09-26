@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Для Go
+.DS_Store
+.idea
+.html
+.out
+.env
