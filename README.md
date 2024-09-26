@@ -31,40 +31,40 @@
 ## Результаты
 - Стартовая страница:
 
-![alt text](/result-images/1.png)
+![alt text](/ui/result-images/1.png)
 - Страница с выбранной фотографией:
 
-![alt text](/result-images/2.png)
+![alt text](/ui/result-images/2.png)
 - Редактор изображения:
 
-![alt text](/result-images/3.png)
+![alt text](/ui/result-images/3.png)
 - Инструмент обрезки фотографии:
 
-![alt text](/result-images/4.png)
+![alt text](/ui/result-images/4.png)
 - Инструмент редактирования размеров:
 
-![alt text](/result-images/5.png)
+![alt text](/ui/result-images/5.png)
 - Поворот и отражение ихображения:
 
-![alt text](/result-images/6.png)
+![alt text](/ui/result-images/6.png)
 - Коррекция изображения:
 
-![alt text](/result-images/7.png)
+![alt text](/ui/result-images/7.png)
 - Выбор фильтра:
 
-![alt text](/result-images/8.png)
+![alt text](/ui/result-images/8.png)
 - Добавление текста на изображение:
 
-![alt text](/result-images/9.png)
+![alt text](/ui/result-images/9.png)
 - Добавление фигуры на изображение:
 
-![alt text](/result-images/10.png)
+![alt text](/ui/result-images/10.png)
 - Результат после всех внесенных изменений:
 
-![alt text](/result-images/11.png)
+![alt text](/ui/result-images/11.png)
 - Предупреждение о несохраненных изменениях:
 
-![alt text](/result-images/12.png)
+![alt text](/ui/result-images/12.png)
 - Полученнное изображение:
 
-![alt text](/result-images/13.png)
+![alt text](/ui/result-images/13.png)

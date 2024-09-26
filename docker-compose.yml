@@ -54,5 +54,5 @@ services:
 volumes:
   auth_api_mysql_data:
     driver: "local"
-  minio-data:/data:
+  minio-data:
     driver: "local"

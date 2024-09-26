@@ -91,26 +91,6 @@ const FilterTool: React.FC<FilterToolProps> = ({
                                 ref={imageRef}
                                 width={width}
                                 height={height}
-                                filters={
-                                    isPreview && selectedFilter
-                                        ? (selectedFilter === 'grayscale'
-                                            ? [Konva.Filters.Grayscale]
-                                            : selectedFilter === 'sepia'
-                                            ? [Konva.Filters.Sepia]
-                                            : selectedFilter === 'vintage'
-                                            ? [Konva.Filters.Sepia, Konva.Filters.Contrast, Konva.Filters.HSL]
-                                            : [])
-                                        : [] // Если нет превью или фильтра, не применяем фильтры
-                                }
-                                {...(selectedFilter === 'vintage' && isPreview
-                                    ? {
-                                        contrast: -0.1,
-                                        saturation: -0.3,
-                                        hue: 20,
-                                    }
-                                    : {}
-                                )}
-                                cache
                             />
                         )}
                     </Layer>
