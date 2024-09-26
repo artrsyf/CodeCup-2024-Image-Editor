@@ -76,8 +76,8 @@ func main() {
 	router.Handle("/api/register", middleware.ValidateContentType(
 		http.HandlerFunc(authHandler.Signup))).Methods("POST")
 
-	router.Handle("/api/refresh", middleware.ValidateContentType(
-		http.HandlerFunc(authHandler.RefreshToken))).Methods("GET")
+	router.Handle("/api/refresh",
+		http.HandlerFunc(authHandler.RefreshToken)).Methods("GET")
 
 	router.Handle("/api/check_access",
 		middleware.ValidateJWTToken(

@@ -159,6 +159,12 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(24 * time.Hour),
 		Secure:  false,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:   "userID",
+		Value:  strconv.Itoa(user.ID),
+		Path:   "/",
+		Secure: false,
+	})
 
 	response, err := json.Marshal(map[string]interface{}{
 		"accessToken": tokenString,
@@ -186,6 +192,17 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIDCookie, err := r.Cookie("userID")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	userID, _ := strconv.Atoi(userIDCookie.Value)
+
 	refreshToken := c.Value
 
 	tokenKey := []byte(os.Getenv("TOKEN_KEY"))
@@ -205,7 +222,7 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, _ := h.UserRepo.GetUserByID(claims.UserID)
+	user, _ := h.UserRepo.GetUserByID(userID)
 	authToken, err := createUserJWT(user, time.Now().Add(15*time.Minute).Unix())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
