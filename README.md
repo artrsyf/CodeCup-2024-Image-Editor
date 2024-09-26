@@ -68,3 +68,76 @@
 - Полученнное изображение:
 
 ![alt text](/ui/result-images/13.png)
+
+## После финального этапа:
+- Пофикшены некоторые ошибки на фронтенде;
+- Добавлен API для авторизации и отправки изображений;
+- Добавлены некоторые отмеченные требования из ТЗ (которые для финала);
+- После дедлайна загружен не совсем правильный коммит на ftp-сервер (из-за чего фильтры могут не срабатывать):
+
+Вместо этого:
+```TypeScript
+return (
+    <div className={styles.canvasContainer} style={isPreview ? { width: '74px', height: '74px' } : {}}>
+        {imageLoaded ? (
+            <Stage width={width} height={height} ref={stageRef}>
+                <Layer>
+                    {image && (
+                        <KonvaImage
+                            image={image}
+                            ref={imageRef}
+                            width={width}
+                            height={height}
+                            filters={
+                                isPreview && selectedFilter
+                                    ? (selectedFilter === 'grayscale'
+                                        ? [Konva.Filters.Grayscale]
+                                        : selectedFilter === 'sepia'
+                                        ? [Konva.Filters.Sepia]
+                                        : selectedFilter === 'vintage'
+                                        ? [Konva.Filters.Sepia, Konva.Filters.Contrast, Konva.Filters.HSL]
+                                        : [])
+                                    : [] // Если нет превью или фильтра, не применяем фильтры
+                            }
+                            {...(selectedFilter === 'vintage' && isPreview
+                                ? {
+                                    contrast: -0.1,
+                                    saturation: -0.3,
+                                    hue: 20,
+                                }
+                                : {}
+                            )}
+                            cache
+                        />
+                    )}
+                </Layer>
+            </Stage>
+        ) : (
+            <div className={styles.loader}>Загрузка...</div>
+        )}
+    </div>
+);
+```
+Должно быть это:
+```TypeScript
+return (
+    <div className={styles.canvasContainer} style={isPreview ? { width: '74px', height: '74px' } : {}}>
+        {imageLoaded ? (
+            <Stage width={width} height={height} ref={stageRef}>
+                <Layer>
+                    {image && (
+                        <KonvaImage
+                            image={image}
+                            ref={imageRef}
+                            width={width}
+                            height={height}
+                        />
+                    )}
+                </Layer>
+            </Stage>
+        ) : (
+            <div className={styles.loader}>Загрузка...</div>
+        )}
+    </div>
+);
+```
