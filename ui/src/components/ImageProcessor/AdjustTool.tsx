@@ -11,10 +11,11 @@ interface AdjustToolProps {
   contrast: number;
   saturation: number;
   exposure: number;
+  temperature: number;
   onImageAdjusted: (newImage: HTMLImageElement) => void;
 }
 
-const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, brightness, contrast, saturation, exposure, onImageAdjusted }) => {
+const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, brightness, contrast, saturation, exposure, temperature, onImageAdjusted }) => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const imageRef = useRef<Konva.Image>(null);
@@ -32,6 +33,12 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
         height: containerHeight,
       });
     }
+  };
+
+  const kelvinToHue = (kelvin: number): number => {
+    const clampedKelvin = Math.max(2000, Math.min(10000, kelvin));
+  
+    return ((clampedKelvin - 6500) / 150) * -1; 
   };
 
   useLayoutEffect(() => {
@@ -59,10 +66,13 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
       imageRef.current.brightness(brightness);
       imageRef.current.contrast(contrast);
       imageRef.current.hue(saturation * 180); 
-      imageRef.current.saturation(exposure - 1); 
+      imageRef.current.saturation(exposure - 1);
+      const hueShift = kelvinToHue(temperature);
+      imageRef.current.hue(hueShift);
+
       imageRef.current.draw();
     }
-  }, [brightness, contrast, saturation, exposure]);
+  }, [brightness, contrast, saturation, exposure, temperature]);
 
   useEffect(() => {
     if (image && stageRef.current) {
@@ -75,7 +85,7 @@ const AdjustTool: React.FC<AdjustToolProps> = ({ imageSrc, width, height, bright
         onImageAdjusted(newImage);
       };
     }
-  }, [image, brightness, contrast, saturation, exposure]);
+  }, [image, brightness, contrast, saturation, exposure, temperature]);
 
   return (
     <div className={styles.canvasContainer}>

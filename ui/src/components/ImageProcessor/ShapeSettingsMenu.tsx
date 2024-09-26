@@ -5,9 +5,10 @@ import styles from './assets/ImageProcessor.module.css';
 
 interface ShapeSettingsMenuProps {
     shapeNode: Konva.Shape;
+    applyChanges: () => void;
 }
 
-const ShapeSettingsMenu: React.FC<ShapeSettingsMenuProps> = ({ shapeNode }) => {
+const ShapeSettingsMenu: React.FC<ShapeSettingsMenuProps> = ({ shapeNode, applyChanges }) => {
     const [color, setColor] = useState<string>(shapeNode.fill() as string);
 
     const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,6 +17,8 @@ const ShapeSettingsMenu: React.FC<ShapeSettingsMenuProps> = ({ shapeNode }) => {
         shapeNode.fill(newColor);
         shapeNode.stroke(newColor);
         shapeNode.getLayer()?.batchDraw();
+
+        applyChanges()
     };
 
     return (

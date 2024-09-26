@@ -7,10 +7,12 @@ interface AdjustSlidersProps {
   contrast: number;
   saturation: number;
   exposure: number;
+  temperature: number;
   setBrightness: (value: number) => void;
   setContrast: (value: number) => void;
   setSaturation: (value: number) => void;
   setExposure: (value: number) => void;
+  setTemperature: (value: number) => void;
 }
 
 const AdjustSliders: FC<AdjustSlidersProps> = ({
@@ -18,10 +20,12 @@ const AdjustSliders: FC<AdjustSlidersProps> = ({
   contrast,
   saturation,
   exposure,
+  temperature,
   setBrightness,
   setContrast,
   setSaturation,
   setExposure,
+  setTemperature,
 }) => {
   const scaleValue = (value: number, inMin: number, inMax: number, outMin: number, outMax: number) => {
     return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
@@ -73,6 +77,18 @@ const AdjustSliders: FC<AdjustSlidersProps> = ({
           color='blue'
           onChange={(event) =>
             setExposure(scaleValue(parseFloat(event.target.value), 0, 100, 0, 2))
+          }
+        />
+      </label>
+
+      <label>
+        Temperature:
+        {/* @ts-ignore */}
+        <Slider
+          value={scaleValue(temperature, 2000, 10000, 0, 100)} // Отображаем значение в диапазоне 0-100
+          color='blue'
+          onChange={(event) =>
+            setTemperature(scaleValue(parseFloat(event.target.value), 0, 100, 2000, 10000)) // Конвертируем в кельвины
           }
         />
       </label>
